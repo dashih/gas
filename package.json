@@ -1,0 +1,24 @@
+{
+  "name": "gas",
+  "version": "1.0.0",
+  "description": "Track MPG and other stats for gas cars",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/dashih/gas.git"
+  },
+  "keywords": [
+    "gas",
+    "track",
+    "cars"
+  ],
+  "author": "dss4f",
+  "license": "GPL-3.0",
+  "bugs": {
+    "url": "https://github.com/dashih/gas/issues"
+  },
+  "homepage": "https://github.com/dashih/gas#readme"
+}
