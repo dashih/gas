@@ -30,20 +30,52 @@
 
       <hr />
 
-      <!-- Form -->
-      <div class="row no-gutters">
-        <div class="col-3 mx-auto">
-          <div class="form-group">
-            <input id="miles" placeholder="Miles" class="form-control text-center mb-2" type="text" />
-            <input id="gallons" placeholder="Gallons" class="form-control text-center mb-2" type="text" />
-            <input id="pricePerGallon" placeholder="$ per gallon" class="form-control text-center mb-2" type="text" />
-            <input id="comments" placeholder="Comments" class="form-control text-center" type="text" />
+      <!-- Messages -->
+      <div id="errorMsgDiv" class="row no-gutters">
+        <div class="col-12 mx-auto">
+          <div id="errorMsg" class="alert alert-danger" role="alert"></div>
+        </div>
+      </div>
+      <div id="successMsgDiv" class="row no-gutters">
+        <div class="col-2 mx-auto">
+          <div class="alert alert-info" role="alert">
+            Success!
           </div>
         </div>
       </div>
-      <div class="row no-gutters">
+
+      <!-- Button to show the form -->
+      <div id="showFormDiv" class="row no-gutters">
         <div class="col-4 mx-auto">
-          <button id="submitButton" type="button" class="btn btn-primary btn-block">Submit</button>
+          <button id="showFormButton" type="button" class="btn btn-info btn-block">Show Form</button>
+        </div>
+      </div>
+
+      <!-- Form for logging new transactions -->
+      <div id="formDiv">
+        <div class="row no-gutters">
+          <div class="col-3 mx-auto">
+            <div class="form-group">
+              <input id="miles" placeholder="Miles" class="form-control text-center mb-2" type="text" />
+              <input id="gallons" placeholder="Gallons" class="form-control text-center mb-2" type="text" />
+              <input id="pricePerGallon" placeholder="$ per gallon" class="form-control text-center mb-2" type="text" />
+              <input id="comments" placeholder="Comments" class="form-control text-center" type="text" />
+            </div>
+          </div>
+        </div>
+        <div class="row no-gutters">
+          <div class="col-4 mx-auto">
+            <button id="submitButton" type="button" class="btn btn-primary btn-block">Submit</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Indeterminate progress bar -->
+      <div id="progressDiv" class="row no-gutters">
+        <div class="col-4 mx-auto">
+          <div class="progress">
+            <div class="progress-bar bg-warning progress-bar-striped progress-bar-animated" style="width:100%;"></div>
+          </div>
         </div>
       </div>
 
@@ -52,11 +84,10 @@
       <!-- Summary -->
       <div class="row no-gutters">
         <div class="col-12 mx-auto">
-          <p id="summary" />
+          <p id="summary"></p>
         </div>
+        <hr />
       </div>
-
-      <hr />
 
       <!-- All transactions in a table -->
       <div class="row no-gutters">

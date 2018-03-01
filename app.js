@@ -6,7 +6,10 @@ app.use(express.static('client'));
 app.use(bodyParser.json());
 
 app.post('/', function(req, res) {
-    res.send(req.body);
+    setTimeout(function() {
+        //res.send(req.body);
+        res.status(500).send("very bad!!!!");
+    }, 1000);
 });
 
 app.listen(5000);
