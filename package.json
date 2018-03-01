@@ -2,7 +2,7 @@
   "name": "gas",
   "version": "1.0.0",
   "description": "Track MPG and other stats for gas cars",
-  "main": "index.js",
+  "main": "app.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"
   },
@@ -20,5 +20,8 @@
   "bugs": {
     "url": "https://github.com/dashih/gas/issues"
   },
-  "homepage": "https://github.com/dashih/gas#readme"
+  "homepage": "https://github.com/dashih/gas#readme",
+  "dependencies": {
+    "express": "^4.16.2"
+  }
 }
