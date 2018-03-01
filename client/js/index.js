@@ -1,6 +1,6 @@
 function submitButtonClick() {
     var payload = { name: '' };
-    payload.name = $('#text0').val();
+    payload.name = $('#miles').val();
     $.ajax({
         type: 'POST',
         contentType: 'application/json',
@@ -12,11 +12,11 @@ function submitButtonClick() {
 }
 
 function successHandler(jsonData) {
-    $('#output').text(jsonData.name);
-    $('#output').fadeIn();
+    $('#summary').text(jsonData.name);
+    $('#summary').fadeIn();
 }
 
 $(document).ready(function() {
-    $('#output').hide();
+    $('#summary').hide();
     $('#submitButton').click(submitButtonClick);
 });

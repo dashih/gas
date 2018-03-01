@@ -1,13 +1,103 @@
-<html>
+<!DOCTYPE html>
+<html lang="en">
+
   <head>
-    <script src="js/jquery-3.3.1.min.js"></script>
-    <script src="js/index.js"></script>
+
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+    <meta name="description" content="">
+    <meta name="author" content="">
+
+    <title>Danny's Gas App</title>
+
+    <!-- Bootstrap core CSS -->
+    <link href="vendor/bootstrap/css/bootstrap.min.css" rel="stylesheet">
+
+    <!-- Custom styles for this template -->
+    <link href="css/full.css" rel="stylesheet">
+
   </head>
 
   <body>
-    <input id="text0" type="text" />
-    <button id="submitButton">Submit</button>
-    <p id="output">
-    </p>
+
+    <div class="container text-light text-center">
+      <!-- Title -->
+      <div class="row mt-3 no-gutters">
+        <div class="col-12 mx-auto">
+          <h1>Danny's Gas App</h1>
+        </div>
+      </div>
+
+      <hr />
+
+      <!-- Form -->
+      <div class="row no-gutters">
+        <div class="col-3 mx-auto">
+          <div class="form-group">
+            <input id="miles" placeholder="Miles" class="form-control text-center mb-2" type="text" />
+            <input id="gallons" placeholder="Gallons" class="form-control text-center mb-2" type="text" />
+            <input id="pricePerGallon" placeholder="$ per gallon" class="form-control text-center mb-2" type="text" />
+            <input id="comments" placeholder="Comments" class="form-control text-center" type="text" />
+          </div>
+        </div>
+      </div>
+      <div class="row no-gutters">
+        <div class="col-4 mx-auto">
+          <button id="submitButton" type="button" class="btn btn-primary btn-block">Submit</button>
+        </div>
+      </div>
+
+      <hr />
+
+      <!-- Summary -->
+      <div class="row no-gutters">
+        <div class="col-12 mx-auto">
+          <p id="summary" />
+        </div>
+      </div>
+
+      <hr />
+
+      <!-- All transactions in a table -->
+      <div class="row no-gutters">
+        <div class="col-12 mx-auto">
+          <div class="table-responsive">
+            <table class="table">
+              <thead>
+                <tr>
+                  <th>Date</th>
+                  <th>Miles</th>
+                  <th>Gallons</th>
+                  <th>MPG</th>
+                  <th>Munny</th>
+                  <th>$ per gallon</th>
+                  <th>Comments</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td>2343</td>
+                  <td>2343</td>
+                  <td>2343</td>
+                  <td>2343</td>
+                  <td>2343</td>
+                  <td>2343</td>
+                  <td>erikgheriogheirogheroighjeroigjherioghjeroighjerogheorghod</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Bootstrap core JavaScript -->
+    <script src="vendor/jquery/jquery.min.js"></script>
+    <script src="vendor/bootstrap/js/bootstrap.bundle.min.js"></script>
+
+    <!-- App javascript -->
+    <script src="js/index.js"></script>
+
   </body>
+
 </html>
