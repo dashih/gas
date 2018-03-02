@@ -1,4 +1,4 @@
-var CAR = Object.freeze('1997-BMW-M3');
+var car;
 var Status = Object.freeze({
     'None': 0,
     'Success': 1,
@@ -32,6 +32,11 @@ function reportStatus(status, msg) {
     currentStatus = status;
 }
 
+function updateCar() {
+    car = $('#carSelector').find(":selected").val();
+    $('#currentCar').text($('#carSelector').find(":selected").text());
+}
+
 function showForm(show) {
     reportStatus(Status.None, null);
     if (show) {
@@ -60,7 +65,7 @@ function requestCarData() {
         contentType: 'application/json',
         dataType: 'json',
         url: '/request',
-        data: JSON.stringify({ car: CAR }),
+        data: JSON.stringify({ car: car }),
         success: requestSuccessHandler,
         error: errorHandler
     });
@@ -107,9 +112,15 @@ function requestSuccessHandler(jsonData) {
         .append($('<p>', { 'text': `$${jsonData.totalMunny.toFixed(2)} and ${jsonData.totalGallons.toFixed(2)} gallons of gas have taken you ${jsonData.totalMiles.toFixed(2)} miles.` }))
         .append($('<p>', { 'text': `Your MPG has been ${jsonData.avgMpg.toFixed(2)} \xB1 ${jsonData.stdDevMpg.toFixed(2)}.` }))
         .append($('<p>', { 'text': `Your avg pump fillup is $${jsonData.avgMunny.toFixed(2)} \xB1 $${jsonData.stdDevMunny.toFixed(2)}.` }))
-        .append($('<p>', { 'text': `Your avg time between fillups is ${jsonData.avgTimeBetween.toFixed(2)} \xB1 ${jsonData.stdDevTimeBetween.toFixed(2)} days, traveling ${jsonData.avgMiles.toFixed(2)} \xB1 ${jsonData.stdDevMiles.toFixed(2)} miles.` }));
+        .append($('<p>', { 'text': `Your avg time between fillups is ${jsonData.avgTimeBetween.toFixed(2)} \xB1 ${jsonData.stdDevTimeBetween.toFixed(2)} days, traveling ${jsonData.avgMiles.toFixed(2)} \xB1 ${jsonData.stdDevMiles.toFixed(2)} miles.` }))
+        .append($('<p>', { 'text': `Avg gas price has been $${jsonData.avgPricePerGallon.toFixed(2)} \xB1 $${jsonData.stdDevPricePerGallon.toFixed(2)}.` }));
 
     showCarData(true);
+}
+
+function carSelectorChanged() {
+    updateCar();
+    requestCarData();
 }
 
 function showFormButtonClick() {
@@ -126,7 +137,7 @@ function submitButtonClick() {
     }
 
     let payload = {
-        'car': CAR,
+        'car': car,
         'date': null,
         'miles': miles,
         'gallons': gallons,
@@ -161,8 +172,10 @@ function errorHandler(xhr, ajaxOptions, thrownError) {
 $(document).ready(() => {
     $('#showFormButton').click(showFormButtonClick);
     $('#submitButton').click(submitButtonClick);
+    $('#carSelector').change(carSelectorChanged);
     showForm(false);
     showCarData(false);
     reportStatus(Status.None, null);
+    updateCar();
     requestCarData();
 });

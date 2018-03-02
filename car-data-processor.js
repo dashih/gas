@@ -42,12 +42,14 @@ function process(carData) {
     let munnyList = [];
     let gallonsList = [];
     let milesList = [];
+    let pricePerList = [];
     for (let i = 0; i < carData.length; i++) {
         let cur = carData[i];
         mpgList.push(cur.miles / cur.gallons);
         munnyList.push(cur.gallons * cur.pricePerGallon);
         gallonsList.push(cur.gallons);
         milesList.push(cur.miles);
+        pricePerList.push(cur.pricePerGallon);
     }
 
     let sortedTransactionsList = sortByDateInverse(carData);
@@ -67,6 +69,8 @@ function process(carData) {
         'stdDevMiles': math.std(milesList),
         'avgTimeBetween': math.mean(timeBetweenList),
         'stdDevTimeBetween': math.std(timeBetweenList),
+        'avgPricePerGallon': math.mean(pricePerList),
+        'stdDevPricePerGallon': math.std(pricePerList),
         'transactions': sortedTransactionsList
     };
 }
