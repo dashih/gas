@@ -77,9 +77,16 @@ function requestSuccessHandler(jsonData) {
     // Populate the table.
     for (let i = 0; i < jsonData.length; i++) {
         let cur = jsonData[i];
+        let dateTime = new Date(cur.date);
+        let shortDateTime =
+            (dateTime.getMonth() + 1) + '/' +
+            dateTime.getDate() + '/' +
+            dateTime.getFullYear() + ' ' +
+            (dateTime.getHours() == 0 ? '00' : dateTime.getHours()) + ':' +
+            dateTime.getMinutes();
         $('#transactionsTable tbody').append(
             $('<tr>')
-                .append($('<td>', { 'text': cur.date }))
+                .append($('<td>', { 'text': shortDateTime }))
                 .append($('<td>', { 'text': cur.miles }))
                 .append($('<td>', { 'text': cur.gallons }))
                 .append($('<td>', { 'text': 'todo' }))
