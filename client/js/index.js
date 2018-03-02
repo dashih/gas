@@ -1,44 +1,60 @@
 var CAR = Object.freeze('1997-BMW-M3');
-var FormState = Object.freeze({
-    'Hidden':0,
-    'Showing':1,
-    'Processing':2});
+var Status = Object.freeze({
+    'None': 0,
+    'Success': 1,
+    'Processing': 2,
+    'Error': 3
+});
 
-function setFormState(formState, msg) {
-    $('#successMsgDiv').hide();
-    $('#errorMsgDiv').hide();
-    $('#formDiv').hide();
-    $('#showFormDiv').hide();
-    $('#progressDiv').hide();
-    switch (formState) {
-        case FormState.Hidden:
-            $('#showFormDiv').show();
+function reportStatus(status, msg) {
+    $('#successFooter').hide();
+    $('#processingFooter').hide();
+    $('#errorFooter').hide();
+    switch (status) {
+        case Status.Success:
+            $('#successMsg').text(msg);
+            $('#successFooter').fadeIn();
+            setTimeout(() => {
+                $('#successFooter').fadeOut();
+            }, 3000);
             break;
-        case FormState.Showing:
-            $('#formDiv').fadeIn();
+        case Status.Processing:
+            $('#processingFooter').show();
             break;
-        case FormState.Processing:
-            $('#progressDiv').show();
+        case Status.Error:
+            $('#errorMsg').text(msg);
+            $('#errorFooter').show();
             break;
         default:
             break;
     }
 
-    if (msg != null) {
-        if (msg == 'OK') {
-            $('#successMsgDiv').fadeIn();
-            setTimeout(() => {
-                $('#successMsgDiv').fadeOut();
-            }, 3000);
-        } else {
-            $('#errorMsg').text(msg);
-            $('#errorMsgDiv').fadeIn();
-        }
+    currentStatus = status;
+}
+
+function showForm(show) {
+    reportStatus(Status.None, null);
+    if (show) {
+        $('#showFormDiv').hide();
+        $('#formDiv').fadeIn();
+    } else {
+        $('#formDiv').hide();
+        $('#showFormDiv').show();
+    }
+}
+
+function showCarData(show) {
+    if (show) {
+        $('#summaryDiv').fadeIn();
+        $('#transactionsDiv').fadeIn();
+    } else {
+        $('#summaryDiv').hide();
+        $('#transactionsDiv').hide();
     }
 }
 
 function requestCarData() {
-    setFormState(FormState.Processing, null);
+    reportStatus(Status.Processing, null);
     $.ajax({
         type: 'POST',
         contentType: 'application/json',
@@ -51,13 +67,32 @@ function requestCarData() {
 }
 
 function requestSuccessHandler(jsonData) {
-    setFormState(FormState.Hidden, 'OK');
-    $('#summary').text(jsonData);
-    $('#summary').fadeIn();
+    reportStatus(Status.Success, 'Successfully retrieved data.');
+    //$('#summary').text(jsonData);
+    //$('#summary').fadeIn();
+
+    // Clear the table.
+    $('#transactionsTable > tbody:last').children().remove();
+
+    // Populate the table.
+    for (let i = 0; i < jsonData.length; i++) {
+        let cur = jsonData[i];
+        $('#transactionsTable tbody').append(
+            $('<tr>')
+                .append($('<td>', { 'text': cur.date }))
+                .append($('<td>', { 'text': cur.miles }))
+                .append($('<td>', { 'text': cur.gallons }))
+                .append($('<td>', { 'text': 'todo' }))
+                .append($('<td>', { 'text': 'todo' }))
+                .append($('<td>', { 'text': cur.pricePerGallon }))
+                .append($('<td>', { 'text': cur.comments })));
+    }
+
+    showCarData(true);
 }
 
 function showFormButtonClick() {
-    setFormState(FormState.Showing, null);
+    showForm(true);
 }
 
 function submitButtonClick() {
@@ -68,7 +103,7 @@ function submitButtonClick() {
         alert('Invalid input!');
         return;
     }
-    
+
     let payload = {
         'car': CAR,
         'date': null,
@@ -78,28 +113,35 @@ function submitButtonClick() {
         'comments': $('#comments').val()
     };
 
-    setFormState(FormState.Processing, null);
+    showForm(false);
+    reportStatus(Status.Processing, null);
     $.ajax({
         type: 'POST',
         contentType: 'application/json',
         dataType: 'json',
         url: '/submit',
         data: JSON.stringify(payload),
-        success: successHandler,
+        success: submitSuccessHandler,
         error: errorHandler
     });
 }
 
-function successHandler(jsonData) {
-    setFormState(FormState.Hidden, 'OK');
+function submitSuccessHandler(jsonData) {
+    reportStatus(Status.Success, 'Successfully posted transaction.');
+    setTimeout(() => {
+        requestCarData();
+    }, 2000);
 }
 
 function errorHandler(xhr, ajaxOptions, thrownError) {
-    setFormState(FormState.Hidden, thrownError + ': ' + xhr.responseText);
+    reportStatus(Status.Error, thrownError + ': ' + xhr.responseText);
 }
 
 $(document).ready(() => {
-    requestCarData();
     $('#showFormButton').click(showFormButtonClick);
     $('#submitButton').click(submitButtonClick);
+    showForm(false);
+    showCarData(false);
+    reportStatus(Status.None, null);
+    requestCarData();
 });

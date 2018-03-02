@@ -30,20 +30,6 @@
 
       <hr />
 
-      <!-- Messages -->
-      <div id="errorMsgDiv" class="row no-gutters">
-        <div class="col-12 mx-auto">
-          <div id="errorMsg" class="alert alert-danger" role="alert"></div>
-        </div>
-      </div>
-      <div id="successMsgDiv" class="row no-gutters">
-        <div class="col-2 mx-auto">
-          <div class="alert alert-info" role="alert">
-            Success!
-          </div>
-        </div>
-      </div>
-
       <!-- Button to show the form -->
       <div id="showFormDiv" class="row no-gutters">
         <div class="col-4 mx-auto">
@@ -70,19 +56,10 @@
         </div>
       </div>
 
-      <!-- Indeterminate progress bar -->
-      <div id="progressDiv" class="row no-gutters">
-        <div class="col-4 mx-auto">
-          <div class="progress">
-            <div class="progress-bar bg-warning progress-bar-striped progress-bar-animated" style="width:100%;"></div>
-          </div>
-        </div>
-      </div>
-
       <hr />
 
       <!-- Summary -->
-      <div class="row no-gutters">
+      <div id="summaryDiv" class="row no-gutters">
         <div class="col-12 mx-auto">
           <p id="summary"></p>
         </div>
@@ -90,10 +67,10 @@
       </div>
 
       <!-- All transactions in a table -->
-      <div class="row no-gutters">
+      <div id="transactionsDiv" class="row no-gutters">
         <div class="col-12 mx-auto">
           <div class="table-responsive">
-            <table class="table">
+            <table id="transactionsTable" class="table">
               <thead>
                 <tr>
                   <th>Date</th>
@@ -121,6 +98,33 @@
         </div>
       </div>
     </div>
+
+    <!-- Footers -->
+    <footer id="successFooter" class="statusSuccess">
+      <div class="container">
+        <div class="row no-gutters">
+          <div id="successMsg" class="col-4 mx-auto text-center text-light"></div>
+        </div>
+      </div>
+    </footer>
+    <footer id="processingFooter" class="statusProcessing">
+      <div class="container">
+        <div class="row no-gutters">
+          <div class="col-4 mx-auto">
+            <div class="progress">
+              <div class="progress-bar bg-info progress-bar-striped progress-bar-animated" style="width:100%;"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </footer>
+    <footer id="errorFooter" class="statusError">
+      <div class="container">
+        <div class="row no-gutters">
+          <div id="errorMsg" class="col-12 mx-auto text-center text-light font-weight-bold"></div>
+        </div>
+      </div>
+    </footer>
 
     <!-- Bootstrap core JavaScript -->
     <script src="vendor/jquery/jquery.min.js"></script>
