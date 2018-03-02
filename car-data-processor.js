@@ -45,8 +45,15 @@ function process(carNode, carData) {
     let pricePerList = [];
     for (let i = 0; i < carData.length; i++) {
         let cur = carData[i];
-        mpgList.push(cur.miles / cur.gallons);
-        munnyList.push(cur.gallons * cur.pricePerGallon);
+
+        let mpg = cur.miles / cur.gallons;
+        cur['mpg'] = mpg;
+        mpgList.push(mpg);
+
+        let munny = cur.gallons * cur.pricePerGallon;
+        cur['munny'] = munny;
+        munnyList.push(munny);
+
         gallonsList.push(cur.gallons);
         milesList.push(cur.miles);
         pricePerList.push(cur.pricePerGallon);
@@ -56,10 +63,8 @@ function process(carNode, carData) {
     let timeBetweenList = calculateTimeBetweenList(sortedTransactionsList);
 
     carNode['numTransactions'] = carData.length;
-    carNode['mpgList'] = mpgList;
     carNode['avgMpg'] = math.mean(mpgList);
     carNode['stdDevMpg'] = math.std(mpgList);
-    carNode['munnyList'] = munnyList;
     carNode['totalMunny'] = math.sum(munnyList);
     carNode['avgMunny'] = math.mean(munnyList);
     carNode['stdDevMunny'] = math.std(munnyList);

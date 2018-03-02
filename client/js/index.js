@@ -95,8 +95,6 @@ function refresh() {
     // Populate the table.
     for (let i = 0; i < carData.transactions.length; i++) {
         let cur = carData.transactions[i];
-        let curMpg = carData.mpgList[i].toFixed(2);
-        let curMunny = carData.munnyList[i].toFixed(2);
         let dateTime = new Date(cur.date);
         let shortDateTime =
             (dateTime.getMonth() + 1) + '/' +
@@ -109,9 +107,9 @@ function refresh() {
                 .append($('<td>', { 'text': shortDateTime }))
                 .append($('<td>', { 'text': cur.miles }))
                 .append($('<td>', { 'text': cur.gallons }))
-                .append($('<td>', { 'text': curMpg }))
+                .append($('<td>', { 'text': cur.mpg.toFixed(2) }))
                 .append($('<td>', { 'text': '$' + cur.pricePerGallon.toFixed(2) }))
-                .append($('<td>', { 'text': '$' + curMunny }))
+                .append($('<td>', { 'text': '$' + cur.munny.toFixed(2) }))
                 .append($('<td>', { 'text': cur.comments })));
     }
 
