@@ -2,6 +2,7 @@ var express = require('express');
 var bodyParser = require('body-parser');
 var fs = require('fs');
 var util = require('util');
+var carDataProcessor = require('./car-data-processor');
 
 var app = express();
 
@@ -13,23 +14,10 @@ app.post('/request', (req, res) => {
     try {
         if (fs.existsSync(carFile)) {
             let carData = JSON.parse(fs.readFileSync(carFile, 'utf8'));
-
-            // Sort in inverse.
-            carData.sort((x, y) => {
-                let d0 = new Date(x.date).getTime();
-                let d1 = new Date(y.date).getTime();
-                if (d0 < d1) {
-                    return 1;
-                } else if (d0 > d1) {
-                    return -1;
-                } else {
-                    return 0;
-                }
-            });
-
-            res.send(carData);
+            let payload = carDataProcessor.process(carData);
+            res.send(payload);
         } else {
-            res.send(JSON.stringify([]));
+            res.send(JSON.stringify({ 'numTransactions': 0 }));
         }
     } catch (err) {
         res.status(500).send(err.message);
@@ -44,11 +32,11 @@ app.post('/submit', (req, res) => {
         if (fs.existsSync(carFile)) {
             let carData = JSON.parse(fs.readFileSync(carFile, 'utf8'));
             carData.push(req.body);
-            fs.writeFileSync(carFile, JSON.stringify(carData), 'utf8');
+            fs.writeFileSync(carFile, JSON.stringify(carData, null, 4), 'utf8');
             res.send({});
         } else {
             fs.mkdirSync('data');
-            fs.writeFileSync(carFile, JSON.stringify([ req.body ], 'utf8'));
+            fs.writeFileSync(carFile, JSON.stringify([ req.body ], null, 4), 'utf8');
             res.send({});
         }
     } catch (err) {

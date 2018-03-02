@@ -67,16 +67,22 @@ function requestCarData() {
 }
 
 function requestSuccessHandler(jsonData) {
+    if (jsonData.numTransactions == 0) {
+        reportStatus(Status.Success, "No transactions yet!");
+        return;
+    }
+
     reportStatus(Status.Success, 'Successfully retrieved data.');
-    //$('#summary').text(jsonData);
-    //$('#summary').fadeIn();
 
     // Clear the table.
     $('#transactionsTable > tbody:last').children().remove();
+    $('#summary').children().remove();
 
     // Populate the table.
-    for (let i = 0; i < jsonData.length; i++) {
-        let cur = jsonData[i];
+    for (let i = 0; i < jsonData.transactions.length; i++) {
+        let cur = jsonData.transactions[i];
+        let curMpg = jsonData.mpgList[i].toFixed(2);
+        let curMunny = jsonData.munnyList[i].toFixed(2);
         let dateTime = new Date(cur.date);
         let shortDateTime =
             (dateTime.getMonth() + 1) + '/' +
@@ -89,11 +95,19 @@ function requestSuccessHandler(jsonData) {
                 .append($('<td>', { 'text': shortDateTime }))
                 .append($('<td>', { 'text': cur.miles }))
                 .append($('<td>', { 'text': cur.gallons }))
-                .append($('<td>', { 'text': 'todo' }))
-                .append($('<td>', { 'text': 'todo' }))
-                .append($('<td>', { 'text': cur.pricePerGallon }))
+                .append($('<td>', { 'text': curMpg }))
+                .append($('<td>', { 'text': '$' + cur.pricePerGallon.toFixed(2) }))
+                .append($('<td>', { 'text': '$' + curMunny }))
                 .append($('<td>', { 'text': cur.comments })));
     }
+
+    // Summary.
+    $('#summary')
+        .append($('<p>', { 'text': `You have hit the pumps ${jsonData.numTransactions} times.` }))
+        .append($('<p>', { 'text': `$${jsonData.totalMunny.toFixed(2)} and ${jsonData.totalGallons.toFixed(2)} gallons of gas have taken you ${jsonData.totalMiles.toFixed(2)} miles.` }))
+        .append($('<p>', { 'text': `Your MPG has been ${jsonData.avgMpg.toFixed(2)} \xB1 ${jsonData.stdDevMpg.toFixed(2)}.` }))
+        .append($('<p>', { 'text': `Your avg pump fillup is $${jsonData.avgMunny.toFixed(2)} \xB1 $${jsonData.stdDevMunny.toFixed(2)}.` }))
+        .append($('<p>', { 'text': `Your avg time between fillups is ${jsonData.avgTimeBetween.toFixed(2)} \xB1 ${jsonData.stdDevTimeBetween.toFixed(2)} days, traveling ${jsonData.avgMiles.toFixed(2)} \xB1 ${jsonData.stdDevMiles.toFixed(2)} miles.` }));
 
     showCarData(true);
 }
