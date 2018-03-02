@@ -1,2 +1,2 @@
-# gas
-Track MPG and other stats for gas cars
+# Danny's Gas Utility
+Track MPG and other stats for Danny's cars.
