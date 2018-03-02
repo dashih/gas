@@ -1,5 +1,5 @@
 module.exports = {
-    process: process
+    getProcessedData: getProcessedData
 };
 
 var math = require('mathjs');
@@ -37,7 +37,7 @@ function calculateTimeBetweenList(carData) {
     return timeBetweenList;
 }
 
-function process(carData) {
+function process(carNode, carData) {
     let mpgList = [];
     let munnyList = [];
     let gallonsList = [];
@@ -54,23 +54,34 @@ function process(carData) {
 
     let sortedTransactionsList = sortByDateInverse(carData);
     let timeBetweenList = calculateTimeBetweenList(sortedTransactionsList);
-    return {
-        'numTransactions': carData.length,
-        'mpgList': mpgList,
-        'avgMpg': math.mean(mpgList),
-        'stdDevMpg': math.std(mpgList),
-        'munnyList': munnyList,
-        'totalMunny': math.sum(munnyList),
-        'avgMunny': math.mean(munnyList),
-        'stdDevMunny': math.std(munnyList),
-        'totalGallons': math.sum(gallonsList),
-        'totalMiles': math.sum(milesList),
-        'avgMiles': math.mean(milesList),
-        'stdDevMiles': math.std(milesList),
-        'avgTimeBetween': math.mean(timeBetweenList),
-        'stdDevTimeBetween': math.std(timeBetweenList),
-        'avgPricePerGallon': math.mean(pricePerList),
-        'stdDevPricePerGallon': math.std(pricePerList),
-        'transactions': sortedTransactionsList
-    };
+
+    carNode['numTransactions'] = carData.length;
+    carNode['mpgList'] = mpgList;
+    carNode['avgMpg'] = math.mean(mpgList);
+    carNode['stdDevMpg'] = math.std(mpgList);
+    carNode['munnyList'] = munnyList;
+    carNode['totalMunny'] = math.sum(munnyList);
+    carNode['avgMunny'] = math.mean(munnyList);
+    carNode['stdDevMunny'] = math.std(munnyList);
+    carNode['totalGallons'] = math.sum(gallonsList);
+    carNode['totalMiles'] = math.sum(milesList);
+    carNode['avgMiles'] = math.mean(milesList);
+    carNode['stdDevMiles'] = math.std(milesList);
+    carNode['avgTimeBetween'] = math.mean(timeBetweenList);
+    carNode['stdDevTimeBetween'] = math.std(timeBetweenList);
+    carNode['avgPricePerGallon'] = math.mean(pricePerList);
+    carNode['stdDevPricePerGallon'] = math.std(pricePerList);
+    carNode['transactions'] = sortedTransactionsList;
+}
+
+function getProcessedData(rawData) {
+    let accumulator = {};
+    for (let prop in rawData) {
+        if (rawData.hasOwnProperty(prop)) {
+            accumulator[prop] = {};
+            process(accumulator[prop], rawData[prop]);
+        }
+    }
+
+    return accumulator;
 }
