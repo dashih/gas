@@ -1,3 +1,4 @@
+var CAR = Object.freeze('1997-BMW-M3');
 var FormState = Object.freeze({
     'Hidden':0,
     'Showing':1,
@@ -26,6 +27,9 @@ function setFormState(formState, msg) {
     if (msg != null) {
         if (msg == 'OK') {
             $('#successMsgDiv').fadeIn();
+            setTimeout(() => {
+                $('#successMsgDiv').fadeOut();
+            }, 3000);
         } else {
             $('#errorMsg').text(msg);
             $('#errorMsgDiv').fadeIn();
@@ -33,21 +37,40 @@ function setFormState(formState, msg) {
     }
 }
 
+function requestCarData() {
+    setFormState(FormState.Processing, null);
+    $.ajax({
+        type: 'POST',
+        contentType: 'application/json',
+        dataType: 'json',
+        url: '/request',
+        data: JSON.stringify({ car: CAR }),
+        success: requestSuccessHandler,
+        error: errorHandler
+    });
+}
+
+function requestSuccessHandler(jsonData) {
+    setFormState(FormState.Hidden, 'OK');
+    $('#summary').text(jsonData);
+    $('#summary').fadeIn();
+}
+
 function showFormButtonClick() {
     setFormState(FormState.Showing, null);
 }
 
 function submitButtonClick() {
-    var miles = parseFloat($('#miles').val());
-    var gallons = parseFloat($('#gallons').val());
-    var pricePerGallon = parseFloat($('#pricePerGallon').val());
+    let miles = parseFloat($('#miles').val());
+    let gallons = parseFloat($('#gallons').val());
+    let pricePerGallon = parseFloat($('#pricePerGallon').val());
     if (isNaN(miles) || isNaN(gallons) || isNaN(pricePerGallon)) {
         alert('Invalid input!');
         return;
     }
     
-    var payload = {
-        'car': '1997-BMW-M3',
+    let payload = {
+        'car': CAR,
         'date': null,
         'miles': miles,
         'gallons': gallons,
@@ -67,7 +90,7 @@ function submitButtonClick() {
     });
 }
 
-function successHandler(msg) {
+function successHandler(jsonData) {
     setFormState(FormState.Hidden, 'OK');
 }
 
@@ -75,8 +98,8 @@ function errorHandler(xhr, ajaxOptions, thrownError) {
     setFormState(FormState.Hidden, thrownError + ': ' + xhr.responseText);
 }
 
-$(document).ready(function() {
-    setFormState(FormState.Hidden);
+$(document).ready(() => {
+    requestCarData();
     $('#showFormButton').click(showFormButtonClick);
     $('#submitButton').click(submitButtonClick);
 });
