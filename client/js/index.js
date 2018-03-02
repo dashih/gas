@@ -38,25 +38,37 @@ function showFormButtonClick() {
 }
 
 function submitButtonClick() {
-    setFormState(FormState.Processing, null);
+    var miles = parseFloat($('#miles').val());
+    var gallons = parseFloat($('#gallons').val());
+    var pricePerGallon = parseFloat($('#pricePerGallon').val());
+    if (isNaN(miles) || isNaN(gallons) || isNaN(pricePerGallon)) {
+        alert('Invalid input!');
+        return;
+    }
     
-    var payload = { name: '' };
-    payload.name = $('#miles').val();
+    var payload = {
+        'car': '1997-BMW-M3',
+        'date': null,
+        'miles': miles,
+        'gallons': gallons,
+        'pricePerGallon': pricePerGallon,
+        'comments': $('#comments').val()
+    };
+
+    setFormState(FormState.Processing, null);
     $.ajax({
         type: 'POST',
         contentType: 'application/json',
         dataType: 'json',
-        url: '/',
+        url: '/submit',
         data: JSON.stringify(payload),
         success: successHandler,
         error: errorHandler
     });
 }
 
-function successHandler(jsonData) {
-    $('#summary').text(jsonData.name);
-    $('#summary').fadeIn();
-    setFormState(FormState.Hidden, 'something went badly wrong');
+function successHandler(msg) {
+    setFormState(FormState.Hidden, 'OK');
 }
 
 function errorHandler(xhr, ajaxOptions, thrownError) {
