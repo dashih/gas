@@ -1,4 +1,5 @@
-var car;
+var car = null;
+var cachedData = null;
 var Status = Object.freeze({
     'None': 0,
     'Success': 1,
@@ -7,9 +8,9 @@ var Status = Object.freeze({
 });
 
 function reportStatus(status, msg) {
+    $('#errorFooter').hide();
     $('#successFooter').hide();
     $('#processingFooter').hide();
-    $('#errorFooter').hide();
     switch (status) {
         case Status.Success:
             $('#successMsg').text(msg);
@@ -65,29 +66,37 @@ function requestCarData() {
         contentType: 'application/json',
         dataType: 'json',
         url: '/request',
-        data: JSON.stringify({ car: car }),
+        data: JSON.stringify({}),
         success: requestSuccessHandler,
         error: errorHandler
     });
 }
 
 function requestSuccessHandler(jsonData) {
-    if (jsonData.numTransactions == 0) {
+    cachedData = jsonData;
+    if (Object.keys(cachedData).length == 0) {
         reportStatus(Status.Success, "No transactions yet!");
         return;
     }
 
     reportStatus(Status.Success, 'Successfully retrieved data.');
+    refresh();
+}
+
+function refresh() {
+    showCarData(false);
+
+    let carData = cachedData[car];
 
     // Clear the table.
     $('#transactionsTable > tbody:last').children().remove();
     $('#summary').children().remove();
 
     // Populate the table.
-    for (let i = 0; i < jsonData.transactions.length; i++) {
-        let cur = jsonData.transactions[i];
-        let curMpg = jsonData.mpgList[i].toFixed(2);
-        let curMunny = jsonData.munnyList[i].toFixed(2);
+    for (let i = 0; i < carData.transactions.length; i++) {
+        let cur = carData.transactions[i];
+        let curMpg = carData.mpgList[i].toFixed(2);
+        let curMunny = carData.munnyList[i].toFixed(2);
         let dateTime = new Date(cur.date);
         let shortDateTime =
             (dateTime.getMonth() + 1) + '/' +
@@ -108,19 +117,19 @@ function requestSuccessHandler(jsonData) {
 
     // Summary.
     $('#summary')
-        .append($('<p>', { 'text': `You have hit the pumps ${jsonData.numTransactions} times.` }))
-        .append($('<p>', { 'text': `$${jsonData.totalMunny.toFixed(2)} and ${jsonData.totalGallons.toFixed(2)} gallons of gas have taken you ${jsonData.totalMiles.toFixed(2)} miles.` }))
-        .append($('<p>', { 'text': `Your MPG has been ${jsonData.avgMpg.toFixed(2)} \xB1 ${jsonData.stdDevMpg.toFixed(2)}.` }))
-        .append($('<p>', { 'text': `Your avg pump fillup is $${jsonData.avgMunny.toFixed(2)} \xB1 $${jsonData.stdDevMunny.toFixed(2)}.` }))
-        .append($('<p>', { 'text': `Your avg time between fillups is ${jsonData.avgTimeBetween.toFixed(2)} \xB1 ${jsonData.stdDevTimeBetween.toFixed(2)} days, traveling ${jsonData.avgMiles.toFixed(2)} \xB1 ${jsonData.stdDevMiles.toFixed(2)} miles.` }))
-        .append($('<p>', { 'text': `Avg gas price has been $${jsonData.avgPricePerGallon.toFixed(2)} \xB1 $${jsonData.stdDevPricePerGallon.toFixed(2)}.` }));
+        .append($('<p>', { 'text': `You have hit the pumps ${carData.numTransactions} times.` }))
+        .append($('<p>', { 'text': `$${carData.totalMunny.toFixed(2)} and ${carData.totalGallons.toFixed(2)} gallons of gas have taken you ${carData.totalMiles.toFixed(2)} miles.` }))
+        .append($('<p>', { 'text': `Your MPG has been ${carData.avgMpg.toFixed(2)} \xB1 ${carData.stdDevMpg.toFixed(2)}.` }))
+        .append($('<p>', { 'text': `Your avg pump fillup is $${carData.avgMunny.toFixed(2)} \xB1 $${carData.stdDevMunny.toFixed(2)}.` }))
+        .append($('<p>', { 'text': `Your avg time between fillups is ${carData.avgTimeBetween.toFixed(2)} \xB1 ${carData.stdDevTimeBetween.toFixed(2)} days, traveling ${carData.avgMiles.toFixed(2)} \xB1 ${carData.stdDevMiles.toFixed(2)} miles.` }))
+        .append($('<p>', { 'text': `Avg gas price has been $${carData.avgPricePerGallon.toFixed(2)} \xB1 $${carData.stdDevPricePerGallon.toFixed(2)}.` }));
 
     showCarData(true);
 }
 
 function carSelectorChanged() {
     updateCar();
-    requestCarData();
+    refresh();
 }
 
 function showFormButtonClick() {
@@ -138,7 +147,6 @@ function submitButtonClick() {
 
     let payload = {
         'car': car,
-        'date': null,
         'miles': miles,
         'gallons': gallons,
         'pricePerGallon': pricePerGallon,
@@ -160,9 +168,8 @@ function submitButtonClick() {
 
 function submitSuccessHandler(jsonData) {
     reportStatus(Status.Success, 'Successfully posted transaction.');
-    setTimeout(() => {
-        requestCarData();
-    }, 2000);
+    cachedData = jsonData;
+    refresh();
 }
 
 function errorHandler(xhr, ajaxOptions, thrownError) {

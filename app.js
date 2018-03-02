@@ -2,7 +2,7 @@ var express = require('express');
 var bodyParser = require('body-parser');
 var fs = require('fs');
 var util = require('util');
-var lockfile = require('lockfile');
+var lockFile = require('lockfile');
 var carDataProcessor = require('./car-data-processor');
 
 var CAR_FILE = Object.freeze('data/cars.json');
@@ -11,37 +11,41 @@ var CAR_LOCK = Object.freeze('data/cars.lock');
 var app = express();
 var cachedData = { 'numTransactions': 0 };
 
+app.use(express.static('client'));
+app.use(bodyParser.json());
+
 app.post('/request', (req, res) => {
     res.send(cachedData);
 });
 
 function check(err, res, msg) {
     if (err) {
-        res.status(500).send('Fatal error :: ' msg + ' :: ' + err);
+        res.status(500).send('Fatal error :: ' + msg + ' :: ' + err);
         throw err;
     }
 }
 
 app.post('/submit', (req, res) => {
-    lockFile.lock(CAR_LOCK, { 'wait': 3000 }, err => {
-        if (err) {
+    lockFile.lock(CAR_LOCK, { 'wait': 3000 }, errLock => {
+        if (errLock) {
             // Though unexpected, don't throw here since it could just be a bad case of lock contention.
             res.status(500).send(
-                err.code === 'EEXIST' ?
+                errLock.code === 'EEXIST' ?
                     'Car lock is taken. Try again later.' :
-                    'Error acquiring car lock:' + err);
+                    'Error acquiring car lock:' + errLock);
+            return;
         }
 
         // Open for read/write.
-        fs.open(CAR_FILE, 'r+', (err, fd) => {
-            check(err, res, 'Error opening car file.');
+        fs.open(CAR_FILE, 'r+', (errOpen, fd) => {
+            check(errOpen, res, 'Error opening car file.');
 
             // Read existing data.
-            fs.readFile(fd, (err, data) => {
-                check(err, res, 'Error reading existing data from car file.');
+            fs.readFile(fd, (errRead, dataRead) => {
+                check(errRead, res, 'Error reading existing data from car file.');
 
                 // Prepare the write payload.
-                let payload = JSON.parse(data);
+                let payload = JSON.parse(dataRead);
                 if (payload[req.body.car] == null) {
                     payload[req.body.car] = [];
                 }
@@ -53,15 +57,15 @@ app.post('/submit', (req, res) => {
                 payload[req.body.car].push(transaction);
 
                 // Persist to disk.
-                fs.writeFile(file, JSON.stringify(payload, null, 4), 'utf8', err => {
-                    check(err, res, 'Error writing car file.');
+                fs.writeFile(fd, JSON.stringify(payload, null, 4), 'utf8', errWrite => {
+                    check(errWrite, res, 'Error writing car file.');
 
-                    // Read again to update the cache.
-                    fs.readFile(fd, (err, data) => {
-                        check(err, res, 'Error refreshing cache.');
-                        cachedData = JSON.parse(data);
-                        fs.close(fd, err => {
-                            check(err, res, 'Error closing car file.');
+                    // Update the cache and cleanup.
+                    cachedData = carDataProcessor.getProcessedData(payload);
+                    fs.close(fd, errClose => {
+                        check(errClose, res, 'Error closing car file.');
+                        lockFile.unlock(CAR_LOCK, errUnlock => {
+                            check(errUnlock, res, 'Error release car lock.');
                             res.send(cachedData);
                         });
                     });
@@ -78,8 +82,5 @@ if (fs.existsSync(CAR_FILE)) {
 } else {
     fs.writeFileSync(CAR_FILE, JSON.stringify({}), 'utf8');
 }
-
-app.use(express.static('client'));
-app.use(bodyParser.json());
 
 app.listen(5000);

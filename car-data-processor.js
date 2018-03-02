@@ -20,7 +20,7 @@ function sortByDateInverse(carData) {
 
 function calculateTimeBetweenList(carData) {
     if (carData.length < 2) {
-        return null;
+        return [ 0.0 ];
     }
 
     let timeBetweenList = [];
