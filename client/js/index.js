@@ -119,10 +119,10 @@ function refresh() {
     $('#totalMiles').text(carData.totalMiles.toFixed(2));
     $('#totalGallons').text(carData.totalGallons.toFixed(2));
     $('#totalMunny').text(`$${carData.totalMunny.toFixed(2)}`);
-    $('#timeBetween').text(`${carData.avgTimeBetween.toFixed(2)} \xB1 ${carData.stdDevTimeBetween.toFixed(2)}`);
+    $('#timeBetween').text(`${carData.avgTimeBetween.toFixed(2)} \xB1 ${carData.stdDevTimeBetween.toFixed(2)} days`);
     $('#munnyPerFillup').text(`$${carData.avgMunny.toFixed(2)} \xB1 $${carData.stdDevMunny.toFixed(2)}`);
     $('#milesPerFillup').text(`${carData.avgMiles.toFixed(2)} \xB1 ${carData.stdDevMiles.toFixed(2)}`);
-    $('#gallonsPerFillup').text('todo');
+    $('#gallonsPerFillup').text(`${carData.avgGallons.toFixed(2)} \xB1 ${carData.stdDevGallons.toFixed(2)}`);
     $('#gasPrice').text(`$${carData.avgPricePerGallon.toFixed(2)} \xB1 $${carData.stdDevPricePerGallon.toFixed(2)}`);
 
     showCarData(true);

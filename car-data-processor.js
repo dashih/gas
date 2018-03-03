@@ -69,6 +69,8 @@ function process(carNode, carData) {
     carNode['avgMunny'] = math.mean(munnyList);
     carNode['stdDevMunny'] = math.std(munnyList);
     carNode['totalGallons'] = math.sum(gallonsList);
+    carNode['avgGallons'] = math.mean(gallonsList);
+    carNode['stdDevGallons'] = math.std(gallonsList);
     carNode['totalMiles'] = math.sum(milesList);
     carNode['avgMiles'] = math.mean(milesList);
     carNode['stdDevMiles'] = math.std(milesList);
