@@ -1,0 +1,13 @@
+[Unit]
+Description=Danny's Gas App (Node.js)
+
+[Service]
+Type=simple
+User=root
+WorkingDirectory=/home/www/gas
+ExecStart=/usr/bin/node /home/www/gas/app.js
+Restart=always
+Environment=NODE_ENV=production
+
+[Install]
+WantedBy=multi-user.target
