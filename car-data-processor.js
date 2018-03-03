@@ -82,7 +82,6 @@ function process(carNode, carData) {
 function getProcessedData(rawData) {
     let accumulator = {};
     Object.keys(rawData).forEach(k => {
-        console.log(k);
         accumulator[k] = {};
         process(accumulator[k], rawData[k]);
     });
