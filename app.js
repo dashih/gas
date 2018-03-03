@@ -1,15 +1,24 @@
-var express = require('express');
-var bodyParser = require('body-parser');
-var fs = require('fs');
-var util = require('util');
-var lockFile = require('lockfile');
-var carDataProcessor = require('./car-data-processor');
+const express = require('express');
+const http = require('http');
+const https = require('https');
+const bodyParser = require('body-parser');
+const fs = require('fs');
+const util = require('util');
+const lockFile = require('lockfile');
+const carDataProcessor = require('./car-data-processor');
 
-var PORT = 81;
-var CAR_FILE = Object.freeze('data/cars.json');
-var CAR_LOCK = Object.freeze('data/cars.lock');
+const httpPort = 8008;
+const httpsPort = 8080;
+const httpsOptions = {
+    key: fs.readFileSync('ssl/privkey.pem'),
+    cert: fs.readFileSync('ssl/cert.pem')
+};
 
-var app = express();
+const carFile = Object.freeze('data/cars.json');
+const carLock = Object.freeze('data/cars.lock');
+
+const app = express();
+
 var cachedData = { 'numTransactions': 0 };
 
 app.use(express.static('client'));
@@ -27,7 +36,7 @@ function check(err, res, msg) {
 }
 
 app.post('/submit', (req, res) => {
-    lockFile.lock(CAR_LOCK, { 'wait': 3000 }, errLock => {
+    lockFile.lock(carLock, { 'wait': 3000 }, errLock => {
         if (errLock) {
             // Though unexpected, don't throw here since it could just be a bad case of lock contention.
             res.status(500).send(
@@ -38,7 +47,7 @@ app.post('/submit', (req, res) => {
         }
 
         // Open for read/write.
-        fs.open(CAR_FILE, 'r+', (errOpen, fd) => {
+        fs.open(carFile, 'r+', (errOpen, fd) => {
             check(errOpen, res, 'Error opening car file.');
 
             // Read existing data.
@@ -65,7 +74,7 @@ app.post('/submit', (req, res) => {
                     cachedData = carDataProcessor.getProcessedData(payload);
                     fs.close(fd, errClose => {
                         check(errClose, res, 'Error closing car file.');
-                        lockFile.unlock(CAR_LOCK, errUnlock => {
+                        lockFile.unlock(carLock, errUnlock => {
                             check(errUnlock, res, 'Error release car lock.');
                             res.send(cachedData);
                         });
@@ -77,11 +86,12 @@ app.post('/submit', (req, res) => {
 });
 
 // Initial synchronous creation or load of data from disk.
-if (fs.existsSync(CAR_FILE)) {
-    let rawData = JSON.parse(fs.readFileSync(CAR_FILE, 'utf8'));
+if (fs.existsSync(carFile)) {
+    let rawData = JSON.parse(fs.readFileSync(carFile, 'utf8'));
     cachedData = carDataProcessor.getProcessedData(rawData);
 } else {
-    fs.writeFileSync(CAR_FILE, JSON.stringify({}), 'utf8');
+    fs.writeFileSync(carFile, JSON.stringify({}), 'utf8');
 }
 
-app.listen(PORT);
+http.createServer(app).listen(httpPort);
+https.createServer(httpsOptions, app).listen(httpsPort);
