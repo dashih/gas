@@ -2,7 +2,7 @@ const express = require('express');
 const http = require('http');
 const https = require('https');
 const bodyParser = require('body-parser');
-const fs = require('fs');
+const fs = require('fs-extra');
 const lockFile = require('lockfile');
 const carDataProcessor = require('./car-data-processor');
 
@@ -18,7 +18,8 @@ const carLock = Object.freeze('data/cars.lock');
 
 const app = express();
 
-var cachedData = { 'numTransactions': 0 };
+var cachedRawData = {};
+var cachedData = {};
 
 app.use(express.static('client'));
 app.use(bodyParser.json());
@@ -45,32 +46,32 @@ app.post('/submit', (req, res) => {
             return;
         }
 
-        // Open for read/write.
-        fs.open(carFile, 'r+', (errOpen, fd) => {
-            check(errOpen, res, 'Error opening car file.');
+        // Backup car file.
+        let backupFile = carFile + '.backup.' + new Date().toISOString();
+        fs.copy(carFile, backupFile, errBackup => {
+            check(errBackup, res, 'Error backing up car file.');
 
-            // Read existing data.
-            fs.readFile(fd, (errRead, dataRead) => {
-                check(errRead, res, 'Error reading existing data from car file.');
+            // Open for read/write.
+            fs.open(carFile, 'r+', (errOpen, fd) => {
+                check(errOpen, res, 'Error opening car file.');
 
                 // Prepare the write payload.
-                let payload = JSON.parse(dataRead);
-                if (payload[req.body.car] == null) {
-                    payload[req.body.car] = [];
+                if (cachedRawData[req.body.car] == null) {
+                    cachedRawData[req.body.car] = [];
                 }
 
                 // Remove the car property since the master file groups by car.
                 let transaction = JSON.parse(JSON.stringify(req.body));
                 delete transaction.car;
                 transaction['date'] = new Date();
-                payload[req.body.car].push(transaction);
+                cachedRawData[req.body.car].push(transaction);
 
                 // Persist to disk.
-                fs.writeFile(fd, JSON.stringify(payload, null, 4), 'utf8', errWrite => {
+                fs.writeFile(fd, JSON.stringify(cachedRawData, null, 4), 'utf8', errWrite => {
                     check(errWrite, res, 'Error writing car file.');
 
                     // Update the cache and cleanup.
-                    cachedData = carDataProcessor.getProcessedData(payload);
+                    cachedData = carDataProcessor.getProcessedData(cachedRawData);
                     fs.close(fd, errClose => {
                         check(errClose, res, 'Error closing car file.');
                         lockFile.unlock(carLock, errUnlock => {
@@ -86,10 +87,11 @@ app.post('/submit', (req, res) => {
 
 // Initial synchronous creation or load of data from disk.
 if (fs.existsSync(carFile)) {
-    let rawData = JSON.parse(fs.readFileSync(carFile, 'utf8'));
-    cachedData = carDataProcessor.getProcessedData(rawData);
+    cachedRawData = JSON.parse(fs.readFileSync(carFile, 'utf8'));
+    cachedData = carDataProcessor.getProcessedData(cachedRawData);
 } else {
-    fs.writeFileSync(carFile, JSON.stringify({}), 'utf8');
+    fs.ensureDirSync('data');
+    fs.writeFileSync(carFile, JSON.stringify(cachedRawData), 'utf8');
 }
 
 http.createServer(app).listen(httpPort);
