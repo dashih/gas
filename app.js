@@ -5,6 +5,7 @@ var util = require('util');
 var lockFile = require('lockfile');
 var carDataProcessor = require('./car-data-processor');
 
+var PORT = 81;
 var CAR_FILE = Object.freeze('data/cars.json');
 var CAR_LOCK = Object.freeze('data/cars.lock');
 
@@ -83,4 +84,4 @@ if (fs.existsSync(CAR_FILE)) {
     fs.writeFileSync(CAR_FILE, JSON.stringify({}), 'utf8');
 }
 
-app.listen(5000);
+app.listen(PORT);
