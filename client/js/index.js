@@ -17,7 +17,7 @@ function reportStatus(status, msg) {
             $('#successFooter').fadeIn();
             setTimeout(() => {
                 $('#successFooter').fadeOut();
-            }, 3000);
+            }, 2000);
             break;
         case Status.Processing:
             $('#processingFooter').show();
@@ -114,13 +114,16 @@ function refresh() {
     }
 
     // Summary.
-    $('#summary')
-        .append($('<p>', { 'text': `You have hit the pumps ${carData.numTransactions} times.` }))
-        .append($('<p>', { 'text': `$${carData.totalMunny.toFixed(2)} and ${carData.totalGallons.toFixed(2)} gallons of gas have taken you ${carData.totalMiles.toFixed(2)} miles.` }))
-        .append($('<p>', { 'text': `Your MPG has been ${carData.avgMpg.toFixed(2)} \xB1 ${carData.stdDevMpg.toFixed(2)}.` }))
-        .append($('<p>', { 'text': `Your avg pump fillup is $${carData.avgMunny.toFixed(2)} \xB1 $${carData.stdDevMunny.toFixed(2)}.` }))
-        .append($('<p>', { 'text': `Your avg time between fillups is ${carData.avgTimeBetween.toFixed(2)} \xB1 ${carData.stdDevTimeBetween.toFixed(2)} days, traveling ${carData.avgMiles.toFixed(2)} \xB1 ${carData.stdDevMiles.toFixed(2)} miles.` }))
-        .append($('<p>', { 'text': `Avg gas price has been $${carData.avgPricePerGallon.toFixed(2)} \xB1 $${carData.stdDevPricePerGallon.toFixed(2)}.` }));
+    $('#numFillups').text(carData.numTransactions);
+    $('#mpg').text(`${carData.avgMpg.toFixed(2)} \xB1 ${carData.stdDevMpg.toFixed(2)}`);
+    $('#totalMiles').text(carData.totalMiles.toFixed(2));
+    $('#totalGallons').text(carData.totalGallons.toFixed(2));
+    $('#totalMunny').text(`$${carData.totalMunny.toFixed(2)}`);
+    $('#timeBetween').text(`${carData.avgTimeBetween.toFixed(2)} \xB1 ${carData.stdDevTimeBetween.toFixed(2)}`);
+    $('#munnyPerFillup').text(`$${carData.avgMunny.toFixed(2)} \xB1 $${carData.stdDevMunny.toFixed(2)}`);
+    $('#milesPerFillup').text(`${carData.avgMiles.toFixed(2)} \xB1 ${carData.stdDevMiles.toFixed(2)}`);
+    $('#gallonsPerFillup').text('todo');
+    $('#gasPrice').text(`$${carData.avgPricePerGallon.toFixed(2)} \xB1 $${carData.stdDevPricePerGallon.toFixed(2)}`);
 
     showCarData(true);
 }
