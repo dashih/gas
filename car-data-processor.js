@@ -81,12 +81,11 @@ function process(carNode, carData) {
 
 function getProcessedData(rawData) {
     let accumulator = {};
-    for (let prop in rawData) {
-        if (rawData.hasOwnProperty(prop)) {
-            accumulator[prop] = {};
-            process(accumulator[prop], rawData[prop]);
-        }
-    }
+    Object.keys(rawData).forEach(k => {
+        console.log(k);
+        accumulator[k] = {};
+        process(accumulator[k], rawData[k]);
+    });
 
     return accumulator;
 }
