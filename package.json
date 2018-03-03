@@ -22,6 +22,10 @@
   },
   "homepage": "https://github.com/dashih/gas#readme",
   "dependencies": {
-    "express": "^4.16.2"
+    "express": "^4.16.2",
+    "fs": "0.0.1-security",
+    "http": "0.0.0",
+    "https": "^1.0.0",
+    "lockfile": "^1.0.3"
   }
 }

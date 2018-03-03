@@ -3,7 +3,6 @@ const http = require('http');
 const https = require('https');
 const bodyParser = require('body-parser');
 const fs = require('fs');
-const util = require('util');
 const lockFile = require('lockfile');
 const carDataProcessor = require('./car-data-processor');
 
