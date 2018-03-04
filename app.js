@@ -1,16 +1,15 @@
 const express = require('express');
-const http = require('http');
 const https = require('https');
 const bodyParser = require('body-parser');
 const fs = require('fs-extra');
 const lockFile = require('lockfile');
 const carDataProcessor = require('./car-data-processor');
 
-const httpPort = 8008;
-const httpsPort = 8080;
+const httpsPort = 443;
 const httpsOptions = {
-    key: fs.readFileSync('ssl/privkey.pem'),
-    cert: fs.readFileSync('ssl/cert.pem')
+    key: fs.readFileSync('../ssl/privkey.pem'),
+    cert: fs.readFileSync('../ssl/cert.pem'),
+    ca: fs.readFileSync('../ssl/fullchain.pem')
 };
 
 const password = Object.freeze('expelliarmus');
@@ -102,5 +101,4 @@ if (fs.existsSync(carFile)) {
     fs.writeFileSync(carFile, JSON.stringify(cachedRawData), 'utf8');
 }
 
-http.createServer(app).listen(httpPort);
 https.createServer(httpsOptions, app).listen(httpsPort);
