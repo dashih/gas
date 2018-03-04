@@ -137,6 +137,10 @@ function showFormButtonClick() {
     showForm(true);
 }
 
+function hideFormButtonClick() {
+    showForm(false);
+}
+
 function submitButtonClick() {
     let password = $('#password').val();
     let miles = parseFloat($('#miles').val());
@@ -181,6 +185,7 @@ function errorHandler(xhr, ajaxOptions, thrownError) {
 
 $(document).ready(() => {
     $('#showFormButton').click(showFormButtonClick);
+    $('#hideFormButton').click(hideFormButtonClick);
     $('#submitButton').click(submitButtonClick);
     $('#carSelector').change(carSelectorChanged);
     showForm(false);
