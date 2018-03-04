@@ -138,6 +138,7 @@ function showFormButtonClick() {
 }
 
 function submitButtonClick() {
+    let password = $('#password').val();
     let miles = parseFloat($('#miles').val());
     let gallons = parseFloat($('#gallons').val());
     let pricePerGallon = parseFloat($('#pricePerGallon').val());
@@ -147,6 +148,7 @@ function submitButtonClick() {
     }
 
     let payload = {
+        'password': password,
         'car': car,
         'miles': miles,
         'gallons': gallons,

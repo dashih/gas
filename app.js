@@ -13,6 +13,7 @@ const httpsOptions = {
     cert: fs.readFileSync('ssl/cert.pem')
 };
 
+const password = Object.freeze('expelliarmus');
 const carFile = Object.freeze('data/cars.json');
 const carLock = Object.freeze('data/cars.lock');
 
@@ -36,6 +37,11 @@ function check(err, res, msg) {
 }
 
 app.post('/submit', (req, res) => {
+    if (req.body.password !== password) {
+        res.status(403).send('Wrong password');
+        return;
+    }
+
     lockFile.lock(carLock, { 'wait': 3000 }, errLock => {
         if (errLock) {
             // Though unexpected, don't throw here since it could just be a bad case of lock contention.
@@ -61,7 +67,9 @@ app.post('/submit', (req, res) => {
                 }
 
                 // Remove the car property since the master file groups by car.
+                // Also remove the password property.
                 let transaction = JSON.parse(JSON.stringify(req.body));
+                delete transaction.password;
                 delete transaction.car;
                 transaction['date'] = new Date();
                 cachedRawData[req.body.car].push(transaction);
