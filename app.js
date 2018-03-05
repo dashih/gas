@@ -5,11 +5,11 @@ const fs = require('fs-extra');
 const lockFile = require('lockfile');
 const carDataProcessor = require('./car-data-processor');
 
-const httpsPort = 443;
+const httpsPort = 8080;
 const httpsOptions = {
-    key: fs.readFileSync('../ssl/privkey.pem'),
-    cert: fs.readFileSync('../ssl/cert.pem'),
-    ca: fs.readFileSync('../ssl/fullchain.pem')
+    key: fs.readFileSync('/etc/letsencrypt/live/dannyshih.net/privkey.pem'),
+    cert: fs.readFileSync('/etc/letsencrypt/live/dannyshih.net/cert.pem'),
+    ca: fs.readFileSync('/etc/letsencrypt/live/dannyshih.net/fullchain.pem')
 };
 
 const password = Object.freeze('expelliarmus');
