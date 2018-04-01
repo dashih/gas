@@ -1,8 +1,8 @@
 const express = require('express');
 const https = require('https');
 const bodyParser = require('body-parser');
-const fs = require('fs-extra');
-const lockFile = require('lockfile');
+const fs = require('fs');
+const crypto = require('crypto');
 const carDataProcessor = require('./car-data-processor');
 
 const httpsPort = 8080;
@@ -13,8 +13,7 @@ const httpsOptions = {
 };
 
 const password = Object.freeze('expelliarmus');
-const carFile = Object.freeze('data/cars.json');
-const carLock = Object.freeze('data/cars.lock');
+const dataDir = Object.freeze('data/');
 
 const app = express();
 
@@ -41,64 +40,51 @@ app.post('/submit', (req, res) => {
         return;
     }
 
-    lockFile.lock(carLock, { 'wait': 3000 }, errLock => {
-        if (errLock) {
-            // Though unexpected, don't throw here since it could just be a bad case of lock contention.
-            res.status(500).send(
-                errLock.code === 'EEXIST' ?
-                    'Car lock is taken. Try again later.' :
-                    'Error acquiring car lock:' + errLock);
+    // Delete the password property.
+    let transaction = JSON.parse(JSON.stringify(req.body));
+    delete transaction.password;
+    transaction['date'] = new Date();
+
+    if (cachedRawData[transaction.car] == null) {
+        cachedRawData[transaction.car] = new Array();
+    }
+
+    // Persist to disk.
+    let file;
+    do {
+        file = crypto.randomBytes(16).toString('hex') + '.json';
+    }
+    while (fs.existsSync(file));
+
+    fs.writeFile(dataDir + file, JSON.stringify(transaction, null, 4), 'utf8', err => {
+        if (err) {
+            let errMsg = 'error recording transaction: ' + err;
+            console.log(errMsg);
+            res.status(500).send(errMsg);
             return;
         }
 
-        // Backup car file.
-        let backupFile = carFile + '.backup.' + new Date().toISOString();
-        fs.copy(carFile, backupFile, errBackup => {
-            check(errBackup, res, 'Error backing up car file.');
+        console.log('wrote ' + file);
 
-            // Open for read/write.
-            fs.open(carFile, 'r+', (errOpen, fd) => {
-                check(errOpen, res, 'Error opening car file.');
-
-                // Prepare the write payload.
-                if (cachedRawData[req.body.car] == null) {
-                    cachedRawData[req.body.car] = [];
-                }
-
-                // Remove the car property since the master file groups by car.
-                // Also remove the password property.
-                let transaction = JSON.parse(JSON.stringify(req.body));
-                delete transaction.password;
-                delete transaction.car;
-                transaction['date'] = new Date();
-                cachedRawData[req.body.car].push(transaction);
-
-                // Persist to disk.
-                fs.writeFile(fd, JSON.stringify(cachedRawData, null, 4), 'utf8', errWrite => {
-                    check(errWrite, res, 'Error writing car file.');
-
-                    // Update the cache and cleanup.
-                    cachedData = carDataProcessor.getProcessedData(cachedRawData);
-                    fs.close(fd, errClose => {
-                        check(errClose, res, 'Error closing car file.');
-                        lockFile.unlock(carLock, errUnlock => {
-                            check(errUnlock, res, 'Error release car lock.');
-                            res.send(cachedData);
-                        });
-                    });
-                });
-            });
-        });
+        // Update cached data.
+        cachedRawData[transaction.car].push(transaction);
+        cachedData = carDataProcessor.getProcessedData(cachedRawData);
+        res.send(cachedData);
     });
 });
 
-// Initial synchronous creation or load of data from disk.
-if (fs.existsSync(carFile)) {
-    cachedRawData = JSON.parse(fs.readFileSync(carFile, 'utf8'));
-    cachedData = carDataProcessor.getProcessedData(cachedRawData);
-} else {
-    fs.ensureDirSync('data');
-    fs.writeFileSync(carFile, JSON.stringify(cachedRawData), 'utf8');
-}
+// Load data from disk.
+let numFiles = 0;
+fs.readdirSync(dataDir).forEach(file => {
+    let data = JSON.parse(fs.readFileSync(dataDir + file));
+    if (cachedRawData[data.car] == null) {
+        cachedRawData[data.car] = new Array();
+    }
 
+    cachedRawData[data.car].push(data);
+    numFiles++;
+});
+
+cachedData = carDataProcessor.getProcessedData(cachedRawData);
+console.log('processed ' + numFiles + ' records');
 https.createServer(httpsOptions, app).listen(httpsPort);

@@ -24,9 +24,7 @@
   "dependencies": {
     "express": "^4.16.2",
     "fs": "0.0.1-security",
-    "fs-extra": "^5.0.0",
     "http": "0.0.0",
-    "https": "^1.0.0",
-    "lockfile": "^1.0.3"
+    "https": "^1.0.0"
   }
 }
