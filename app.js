@@ -27,13 +27,6 @@ app.post('/request', (req, res) => {
     res.send(cachedData);
 });
 
-function check(err, res, msg) {
-    if (err) {
-        res.status(500).send('Fatal error :: ' + msg + ' :: ' + err);
-        throw err;
-    }
-}
-
 app.post('/submit', (req, res) => {
     if (req.body.password !== password) {
         res.status(403).send('Wrong password');
