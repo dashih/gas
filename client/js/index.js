@@ -74,12 +74,18 @@ function requestCarData() {
 
 function requestSuccessHandler(jsonData) {
     cachedData = jsonData;
-    if (Object.keys(cachedData).length == 0) {
+    let numCars = Object.keys(cachedData).length;
+    if (numCars === 0) {
         reportStatus(Status.Success, "No transactions yet!");
         return;
     }
 
-    reportStatus(Status.Success, 'Successfully retrieved data.');
+    let totalTransactions = 0;
+    Object.keys(cachedData).forEach(k => {
+        totalTransactions += cachedData[k].transactions.length;
+    });
+
+    reportStatus(Status.Success, 'Retrieved ' + totalTransactions + ' entries for ' + numCars + ' cars');
     refresh();
 }
 
@@ -174,7 +180,7 @@ function submitButtonClick() {
 }
 
 function submitSuccessHandler(jsonData) {
-    reportStatus(Status.Success, 'Successfully posted transaction.');
+    reportStatus(Status.Success, 'Successfully posted transaction');
     cachedData = jsonData;
     refresh();
 }
