@@ -1,7 +1,7 @@
 const express = require('express');
 const https = require('https');
 const bodyParser = require('body-parser');
-const fs = require('fs');
+const fs = require('fs-extra');
 const crypto = require('crypto');
 const carDataProcessor = require('./car-data-processor');
 
@@ -68,6 +68,7 @@ app.post('/submit', (req, res) => {
 
 // Load data from disk.
 let numFiles = 0;
+fs.ensureDirSync(dataDir);
 fs.readdirSync(dataDir).forEach(file => {
     let data = JSON.parse(fs.readFileSync(dataDir + file));
     if (cachedRawData[data.car] == null) {

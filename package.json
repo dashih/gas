@@ -23,7 +23,7 @@
   "homepage": "https://github.com/dashih/gas#readme",
   "dependencies": {
     "express": "^4.16.2",
-    "fs": "0.0.1-security",
+    "fs-extra": "^6.0.1",
     "https": "^1.0.0",
     "mathjs": "^4.0.1"
   }
