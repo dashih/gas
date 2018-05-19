@@ -27,7 +27,7 @@ app.post('/request', (req, res) => {
     res.send(cachedData);
 });
 
-app.post('/submit', (req, res) => {
+app.post('/submit', async (req, res) => {
     if (req.body.password !== password) {
         res.status(403).send('Wrong password');
         return;
@@ -43,27 +43,24 @@ app.post('/submit', (req, res) => {
     }
 
     // Persist to disk.
-    let file;
-    do {
-        file = crypto.randomBytes(16).toString('hex') + '.json';
-    }
-    while (fs.existsSync(file));
+    try {
+        let file;
+        do {
+            file = dataDir + crypto.randomBytes(16).toString('hex') + '.json';
+        } while (await fs.pathExists(file));
 
-    fs.writeFile(dataDir + file, JSON.stringify(transaction, null, 4), 'utf8', err => {
-        if (err) {
-            let errMsg = 'error recording transaction: ' + err;
-            console.log(errMsg);
-            res.status(500).send(errMsg);
-            return;
-        }
-
+        await fs.writeFile(file, JSON.stringify(transaction, null, 4));
         console.log('wrote ' + file);
 
         // Update cached data.
         cachedRawData[transaction.car].push(transaction);
         cachedData = carDataProcessor.getProcessedData(cachedRawData);
         res.send(cachedData);
-    });
+    } catch (err) {
+        let errMsg = 'error recording transaction: ' + err;
+        console.log(errMsg);
+        res.status(500).send(errMsg);
+    }
 });
 
 // Load data from disk.
