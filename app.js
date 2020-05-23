@@ -14,7 +14,7 @@ const httpsOptions = {
     ca: fs.readFileSync('/etc/letsencrypt/live/dannyshih.net/fullchain.pem')
 };
 
-const password = Object.freeze('ytUsH@XKBwP2^9*S4y36)ZYcmmeH{wi{eRB9VY9)]]([^&VN!8)p&b}9w3Kqz3c.*?U<7K6P7H3@7T]m&@mf@)9j>+YK8bD+KaH[w.C){3.M]y7v9&owp)fDA<jXKzC');
+const password = Object.freeze(fs.readFileSync('config/PASSWORD', 'utf8'));
 const dataDir = Object.freeze('data/');
 
 const app = express();
