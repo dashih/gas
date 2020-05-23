@@ -25,6 +25,10 @@ var cachedData = {};
 app.use(express.static('client'));
 app.use(bodyParser.json());
 
+app.get('/getNodeVersion', (req, res) => {
+    res.send(process.version);
+});
+
 app.post('/request', (req, res) => {
     res.send(cachedData);
 });

@@ -1,3 +1,4 @@
+var nodeVersion = null;
 var car = null;
 var cachedData = null;
 var Status = Object.freeze({
@@ -57,6 +58,12 @@ function showCarData(show) {
         $('#summaryDiv').hide();
         $('#transactionsDiv').hide();
     }
+}
+
+function requestNodeVersion() {
+    $.get('/getNodeVersion', (data, status) => {
+        $('#nodeVersion').text('Node.js ' + data);
+    });
 }
 
 function requestCarData() {
@@ -190,6 +197,7 @@ function errorHandler(xhr, ajaxOptions, thrownError) {
 }
 
 $(document).ready(() => {
+    requestNodeVersion();
     $('#showFormButton').click(showFormButtonClick);
     $('#hideFormButton').click(hideFormButtonClick);
     $('#submitButton').click(submitButtonClick);
