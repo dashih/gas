@@ -4,18 +4,21 @@ const express = require('express');
 const https = require('https');
 const bodyParser = require('body-parser');
 const fs = require('fs-extra');
+const path = require('path');
 const crypto = require('crypto');
 const carDataProcessor = require('./car-data-processor');
 
+// Parse config
+const config = JSON.parse(fs.readFileSync('config.json', 'utf8'));
+const dataDir = Object.freeze(config['dataDir']);
+const password = Object.freeze(config['password']);
+
 const httpsPort = 8080;
 const httpsOptions = {
-    key: fs.readFileSync('/etc/letsencrypt/live/dannyshih.net/privkey.pem'),
-    cert: fs.readFileSync('/etc/letsencrypt/live/dannyshih.net/cert.pem'),
-    ca: fs.readFileSync('/etc/letsencrypt/live/dannyshih.net/fullchain.pem')
+    key: fs.readFileSync(config['sslKeyFile']),
+    cert: fs.readFileSync(config['sslCertFile']),
+    ca: fs.readFileSync(config['sslCaFile'])
 };
-
-const password = Object.freeze(fs.readFileSync('config/PASSWORD', 'utf8'));
-const dataDir = Object.freeze('data/');
 
 const app = express();
 
@@ -52,7 +55,7 @@ app.post('/submit', async (req, res) => {
     try {
         let file;
         do {
-            file = dataDir + crypto.randomBytes(16).toString('hex') + '.json';
+            file = path.join(dataDir, crypto.randomBytes(16).toString('hex')) + '.json';
         } while (await fs.pathExists(file));
 
         await fs.writeFile(file, JSON.stringify(transaction, null, 4));
@@ -73,7 +76,7 @@ app.post('/submit', async (req, res) => {
 let numFiles = 0;
 fs.ensureDirSync(dataDir);
 fs.readdirSync(dataDir).forEach(file => {
-    let data = JSON.parse(fs.readFileSync(dataDir + file));
+    let data = JSON.parse(fs.readFileSync(path.join(dataDir, file)));
     if (cachedRawData[data.car] == null) {
         cachedRawData[data.car] = new Array();
     }
