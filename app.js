@@ -37,7 +37,8 @@ app.post('/request', (req, res) => {
 });
 
 app.post('/submit', async (req, res) => {
-    if (req.body.password !== password) {
+    let providedPassword = crypto.createHash("sha512").update(req.body.password).digest("hex");
+    if (providedPassword !== password) {
         res.status(403).send('Wrong password');
         return;
     }
