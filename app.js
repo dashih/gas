@@ -11,6 +11,8 @@ const carDataProcessor = require('./car-data-processor');
 // Parse config
 const config = JSON.parse(fs.readFileSync('config.json', 'utf8'));
 const dataDir = Object.freeze(config['dataDir']);
+const uid = config['uid'];
+const gid = config['gid'];
 const password = Object.freeze(config['password']);
 
 const httpsPort = 8080;
@@ -60,6 +62,7 @@ app.post('/submit', async (req, res) => {
         } while (await fs.pathExists(file));
 
         await fs.writeFile(file, JSON.stringify(transaction, null, 4));
+        await fs.chown(file, uid, gid);
         console.log('wrote ' + file);
 
         // Update cached data.
@@ -76,6 +79,7 @@ app.post('/submit', async (req, res) => {
 // Load data from disk.
 let numFiles = 0;
 fs.ensureDirSync(dataDir);
+fs.chownSync(dataDir, uid, gid);
 fs.readdirSync(dataDir).forEach(file => {
     let data = JSON.parse(fs.readFileSync(path.join(dataDir, file)));
     if (cachedRawData[data.car] == null) {

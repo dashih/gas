@@ -1,5 +1,7 @@
 {
     "dataDir": "",
+    "uid": 0,
+    "gid": 0,
     "sslKeyFile": "",
     "sslCertFile": "",
     "sslCaFile": "",
