@@ -1,11 +1,12 @@
 [Unit]
 Description=Danny's Gas App (Node.js)
+After=mongod.service
 
 [Service]
 Type=simple
 User=root
-WorkingDirectory=/home/dss4f/www/gas
-ExecStart=/usr/bin/node /home/dss4f/www/gas/app.js
+WorkingDirectory=/opt/www/gas
+ExecStart=/usr/bin/node /opt/www/gas/app.js
 Restart=always
 Environment=NODE_ENV=production
 
