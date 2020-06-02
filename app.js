@@ -3,10 +3,8 @@
 const express = require('express');
 const https = require('https');
 const bodyParser = require('body-parser');
-const fs = require('fs-extra');
+const fs = require('fs');
 const path = require('path');
-const crypto = require('crypto');
-const carDataProcessor = require('./car-data-processor');
 const MongoClient = require('mongodb').MongoClient;
 const util = require('util');
 const moment = require('moment');
@@ -26,9 +24,6 @@ const dbReadOnlyUser = Object.freeze(config['dbReadOnlyUser']);
 const dbReadOnlyPassword = Object.freeze(config['dbReadOnlyPassword']);
 
 const app = express();
-
-var cachedRawData = {};
-var cachedData = {};
 
 app.use(express.static('client'));
 app.use(bodyParser.json());
