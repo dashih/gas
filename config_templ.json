@@ -1,9 +1,11 @@
 {
-    "dataDir": "",
-    "uid": 0,
-    "gid": 0,
+    "port": 0,
     "sslKeyFile": "",
     "sslCertFile": "",
     "sslCaFile": "",
-    "password": ""
+    "dbHost": "",
+    "db": "",
+    "dbReadWriteUser": "",
+    "dbReadOnlyUser": "",
+    "dbReadOnlyPassword": ""
 }
