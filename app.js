@@ -19,7 +19,9 @@ const httpsOptions = {
     cert: fs.readFileSync(config['sslCertFile']),
     ca: fs.readFileSync(config['sslCaFile'])
 };
-const dbFormat = Object.freeze(util.format('mongodb://%%s:%%s@%s/%s', config['dbHost'], config['db']));
+const db = config['db'];
+const dbReadWriteUser = config['dbReadWriteUser'];
+const dbFormat = Object.freeze(util.format('mongodb://%%s:%%s@%s/%s', config['dbHost'], db));
 const dbReadOnlyUser = Object.freeze(config['dbReadOnlyUser']);
 const dbReadOnlyPassword = Object.freeze(config['dbReadOnlyPassword']);
 
@@ -35,28 +37,33 @@ app.get('/getNodeVersion', (req, res) => {
     res.send(process.version);
 });
 
-app.post('/request', async (req, res) => {
+async function retrieveData(res) {
     let client = await MongoClient.connect(
         util.format(dbFormat, dbReadOnlyUser, encodeURIComponent(dbReadOnlyPassword)),
         { useNewUrlParser: true, useUnifiedTopology: true })
-        .catch(connErr => { console.log(connErr); });
+        .catch(connErr => {
+            console.error(connErr);
+            res.status(500).send(connErr);
+        });
+    if (client == null) {
+        return;
+    }
+
     try {
         let data = {};
-        let gasDb = client.db('gas');
+        let gasDb = client.db(db);
         let collections = await gasDb.listCollections().toArray();
         for (let collection of collections) {
             let car = collection['name'];
+            data[car] = {};
+            data[car]['transactions'] = new Array();
 
             // Record the first and last fillup date to calculate average time between fills.
             let firstDate = null;
             let lastDate = null;
 
+            // Populate raw transaction data and calculate basic aggregate fields.
             await gasDb.collection(car).find({}).sort({ date: -1 }).forEach(doc => {
-                if (data[car] == null) {
-                    data[car] = {};
-                    data[car]['transactions'] = new Array();
-                }
-
                 // mpg and munny are generated (not stored in db)
                 doc['mpg'] = doc['miles'] / doc['gallons'];
                 doc['munny'] = doc['gallons'] * doc['pricePerGallon'];
@@ -70,6 +77,7 @@ app.post('/request', async (req, res) => {
                 data[car]['transactions'].push(doc);
             });
 
+            // Populate complex aggregate fields using MongoDB.
             await gasDb.collection(car).aggregate([
                 {
                     $group: {
@@ -109,43 +117,50 @@ app.post('/request', async (req, res) => {
     } finally {
         client.close();
     }
+}
+
+app.post('/request', async (req, res) => {
+    await retrieveData(res);
 });
 
 app.post('/submit', async (req, res) => {
-    let providedPassword = crypto.createHash("sha512").update(req.body.password).digest("hex");
-    if (providedPassword !== password) {
-        res.status(403).send('Wrong password');
+    let dbRwPassword = req.body.password;
+    let car = req.body.car;
+
+    // Delete the password field since we only use that to auth with the db.
+    // Delete the car field, because we use a MongoDB collection for each car.
+    let transaction = JSON.parse(JSON.stringify(req.body));
+    delete transaction.password;
+    delete transaction.car;
+
+    // Set the date field to now.
+    transaction['date'] = new Date();
+
+    // Write to db.
+    let client = await MongoClient.connect(
+        util.format(dbFormat, dbReadWriteUser, encodeURIComponent(dbRwPassword)),
+        { useNewUrlParser: true, useUnifiedTopology: true })
+        .catch(connErr => {
+            console.error(connErr);
+            if (connErr.message.includes("Authentication failed")) {
+                res.status(403).send('Wrong password!');
+            } else {
+                res.status(500).send(connErr);
+            }
+        });
+    if (client == null) {
         return;
     }
 
-    // Delete the password property.
-    let transaction = JSON.parse(JSON.stringify(req.body));
-    delete transaction.password;
-    transaction['date'] = new Date();
-
-    if (cachedRawData[transaction.car] == null) {
-        cachedRawData[transaction.car] = new Array();
-    }
-
-    // Persist to disk.
     try {
-        let file;
-        do {
-            file = path.join(dataDir, crypto.randomBytes(16).toString('hex')) + '.json';
-        } while (await fs.pathExists(file));
+        await client.db(db).collection(req.body.car).insertOne(transaction);
 
-        await fs.writeFile(file, JSON.stringify(transaction, null, 4));
-        await fs.chown(file, uid, gid);
-        console.log('wrote ' + file);
-
-        // Update cached data.
-        cachedRawData[transaction.car].push(transaction);
-        cachedData = carDataProcessor.getProcessedData(cachedRawData);
-        res.send(cachedData);
+        // Trigger another full retrieve.
+        await retrieveData(res);
     } catch (err) {
-        let errMsg = 'error recording transaction: ' + err;
-        console.log(errMsg);
-        res.status(500).send(errMsg);
+        res.send(err);
+    } finally {
+        client.close();
     }
 });
 
