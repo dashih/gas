@@ -1,4 +1,3 @@
-var nodeVersion = null;
 var car = null;
 var cachedData = null;
 var Status = Object.freeze({
@@ -60,9 +59,9 @@ function showCarData(show) {
     }
 }
 
-function requestNodeVersion() {
-    $.get('/getNodeVersion', (data, status) => {
-        $('#nodeVersion').text('Node.js ' + data);
+function requestVersion() {
+    $.get('/getVersion', (data, status) => {
+        $('#version').text('Version ' + data.appVersion + ' | ' + 'Node.js ' + data.nodeVersion);
     });
 }
 
@@ -197,7 +196,7 @@ function errorHandler(xhr, ajaxOptions, thrownError) {
 }
 
 $(document).ready(() => {
-    requestNodeVersion();
+    requestVersion();
     $('#showFormButton').click(showFormButtonClick);
     $('#hideFormButton').click(hideFormButtonClick);
     $('#submitButton').click(submitButtonClick);

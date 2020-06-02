@@ -4,6 +4,7 @@ const express = require('express');
 const https = require('https');
 const bodyParser = require('body-parser');
 const fs = require('fs');
+const fsAsync = require('fs').promises;
 const path = require('path');
 const MongoClient = require('mongodb').MongoClient;
 const util = require('util');
@@ -28,8 +29,13 @@ const app = express();
 app.use(express.static('client'));
 app.use(bodyParser.json());
 
-app.get('/getNodeVersion', (req, res) => {
-    res.send(process.version);
+app.get('/getVersion', async (req, res) => {
+    let packageJson = JSON.parse(await fsAsync.readFile('package.json', 'utf8'));
+    console.log(packageJson);
+    res.send({
+        appVersion: packageJson['version'],
+        nodeVersion: process.version
+    });
 });
 
 async function retrieveData(res) {
