@@ -26,6 +26,8 @@
     "fs-extra": "^6.0.1",
     "https": "^1.0.0",
     "mathjs": "^4.4.2",
+    "moment": "^2.26.0",
+    "mongodb": "^3.5.8",
     "prompt-sync": "^4.2.0"
   }
 }
