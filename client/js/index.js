@@ -61,7 +61,7 @@ function showCarData(show) {
 
 function requestVersion() {
     $.get('/getVersion', (data, status) => {
-        $('#version').text('Version ' + data.appVersion + ' | ' + 'Node.js ' + data.nodeVersion);
+        $('#version').text('Version ' + data.appVersion + ' | ' + 'Node.js ' + data.nodeVersion + ' | ' + 'MongoDB ' + data.mongoVersion);
     });
 }
 

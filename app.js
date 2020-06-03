@@ -31,11 +31,30 @@ app.use(bodyParser.json());
 
 app.get('/getVersion', async (req, res) => {
     let packageJson = JSON.parse(await fsAsync.readFile('package.json', 'utf8'));
-    console.log(packageJson);
-    res.send({
-        appVersion: packageJson['version'],
-        nodeVersion: process.version
-    });
+    let client = await MongoClient.connect(
+        util.format(dbFormat, dbReadOnlyUser, encodeURIComponent(dbReadOnlyPassword)),
+        { useNewUrlParser: true, useUnifiedTopology: true })
+        .catch(connErr => {
+            console.error(connErr);
+            res.status(500).send(connErr);
+        });
+    if (client == null) {
+        return;
+    }
+
+    try {
+        let mongoInfo = await client.db(db).admin().serverInfo();
+        res.send({
+            appVersion: packageJson['version'],
+            nodeVersion: process.version,
+            mongoVersion: mongoInfo.version
+        });
+    } catch (err) {
+        console.error(err);
+        res.status(500).send(err);
+    } finally {
+        client.close();
+    }
 });
 
 async function retrieveData(res) {
