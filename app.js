@@ -30,6 +30,8 @@ app.use(express.static('client'));
 app.use(bodyParser.json());
 
 app.get('/getVersion', async (req, res) => {
+    let fullOsVersion = await fsAsync.readFile('/etc/centos-release', 'utf8');
+    let osVersion = fullOsVersion.match(/[0-9,\.]+/)[0];
     let packageJson = JSON.parse(await fsAsync.readFile('package.json', 'utf8'));
     let client = await MongoClient.connect(
         util.format(dbFormat, dbReadOnlyUser, encodeURIComponent(dbReadOnlyPassword)),
@@ -45,6 +47,7 @@ app.get('/getVersion', async (req, res) => {
     try {
         let mongoInfo = await client.db(db).admin().serverInfo();
         res.send({
+            osVersion: osVersion,
             appVersion: packageJson['version'],
             nodeVersion: process.version,
             mongoVersion: mongoInfo.version
