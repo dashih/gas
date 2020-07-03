@@ -50,7 +50,9 @@ app.get('/getVersion', async (req, res) => {
             osVersion: osVersion,
             appVersion: packageJson['version'],
             nodeVersion: process.version,
-            mongoVersion: mongoInfo.version
+            mongoVersion: mongoInfo.version,
+            mongoClientVersion: packageJson['dependencies']['mongodb'],
+            expressVersion: packageJson['dependencies']['express']
         });
     } catch (err) {
         console.error(err);

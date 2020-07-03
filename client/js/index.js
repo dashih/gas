@@ -61,11 +61,18 @@ function showCarData(show) {
 
 function requestVersion() {
     $.get('/getVersion', (data, status) => {
-        $('#version').text(
-            'v' + data.appVersion + ' | ' +
+        $('#version').html(
+            'v' + data.appVersion +
+            '<br />' +
             'CentOS ' + data.osVersion + ' | ' +
             'Node.js ' + data.nodeVersion + ' | ' +
-            'MongoDB ' + data.mongoVersion);
+            'MongoDB server ' + data.mongoVersion +
+            '<br />' +
+            'Express ' + data.expressVersion + ' | ' +
+            'MongoDB client ' + data.mongoClientVersion +
+            '<br />' +
+            'jQuery ' + jQuery().jquery + ' | ' +
+            'Bootstrap 4.0.0')
     });
 }
 

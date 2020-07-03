@@ -45,3 +45,8 @@ hr {
     border-width: 2px;
     border-color: #BBBBBB;
 }
+
+.versions {
+    font-family: "Lucida Console", Monaco, monospace;
+    font-size: x-small;
+}
