@@ -72,7 +72,7 @@ function requestVersion() {
             'MongoDB client ' + data.mongoClientVersion +
             '<br />' +
             'jQuery ' + jQuery().jquery + ' | ' +
-            'Bootstrap 4.0.0')
+            'Bootstrap 4.5.0')
     });
 }
 
