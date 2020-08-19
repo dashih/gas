@@ -139,6 +139,7 @@ function refresh() {
     // Summary.
     $('#numFillups').text(carData.numTransactions);
     $('#mpg').text(`${carData.avgMpg.toFixed(2)} \xB1 ${carData.stdDevMpg.toFixed(2)}`);
+    $('#mpgMaxMin').text(`${carData.minMpg.toFixed(2)} - ${carData.maxMpg.toFixed(2)}`);
     $('#totalMiles').text(carData.totalMiles.toFixed(2));
     $('#totalGallons').text(carData.totalGallons.toFixed(2));
     $('#totalMunny').text(`$${carData.totalMunny.toFixed(2)}`);

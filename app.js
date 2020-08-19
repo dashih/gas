@@ -110,6 +110,8 @@ async function retrieveData(res) {
                         numTransactions: { $sum: 1},
                         avgMpg: { $avg: { $divide: ['$miles', '$gallons'] } },
                         stdDevMpg: { $stdDevSamp: { $divide: ['$miles', '$gallons'] } },
+                        minMpg: { $min: { $divide: ['$miles', '$gallons'] } },
+                        maxMpg: { $max: { $divide: ['$miles', '$gallons'] } },
                         totalMunny: { $sum: { $multiply: ['$gallons', '$pricePerGallon'] } },
                         avgMunny: { $avg: { $multiply: ['$gallons', '$pricePerGallon'] } },
                         stdDevMunny: { $stdDevSamp: { $multiply: ['$gallons', '$pricePerGallon'] } },
