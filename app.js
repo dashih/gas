@@ -67,6 +67,8 @@ app.get('/getVersion', async (req, res) => {
 });
 
 async function retrieveData(res) {
+    let startTime = moment();
+
     let client = await MongoClient.connect(
         util.format(dbFormat, dbReadOnlyUser, encodeURIComponent(dbReadOnlyPassword)),
         { useNewUrlParser: true, useUnifiedTopology: true })
@@ -186,6 +188,8 @@ async function retrieveData(res) {
         client.close();
         redisClient.quit();
     }
+
+    console.log("Retrieve operation took " + moment().diff(startTime, "milliseconds") + " ms");
 }
 
 app.post('/request', async (req, res) => {
