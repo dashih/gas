@@ -9,5 +9,6 @@
     "dbReadOnlyUser": "",
     "dbReadOnlyPassword": "",
     "redisHost",
-    "redisPassword"
+    "redisPassword",
+    "redisDb"
 }

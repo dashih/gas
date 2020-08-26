@@ -26,6 +26,7 @@ const dbReadOnlyUser = Object.freeze(config['dbReadOnlyUser']);
 const dbReadOnlyPassword = Object.freeze(config['dbReadOnlyPassword']);
 const redisHost = Object.freeze(config['redisHost']);
 const redisPassword = Object.freeze(config['redisPassword']);
+const redisDb = config['redisDb'];
 
 const app = express();
 
@@ -102,7 +103,7 @@ async function retrieveData(res) {
             // Check Redis for cached data
             try {
 
-                await redisSelect(1);
+                await redisSelect(redisDb);
                 data[car] = JSON.parse(await redisGet(car));
             } catch (redisErr) {
                 console.warn("Redis error: " + redisErr);
@@ -170,6 +171,7 @@ async function retrieveData(res) {
 
                 // Cache data in redis
                 try {
+                    await redisSelect(redisDb);
                     await redisSet(car, JSON.stringify(data[car]));
                 } catch (redisErr2) {
                     // Don't log anything. Any error will have already surfaced.
@@ -231,7 +233,7 @@ app.post('/submit', async (req, res) => {
 
         // Invalidate redis cache for car
         try {
-            await redisSelect(1);
+            await redisSelect(redisDb);
             await redisDel(req.body.car);
         } catch (redisErr) {
             console.warn("Failed to delete entry from redis. Presented data could be stale!");
