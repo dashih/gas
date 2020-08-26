@@ -7,6 +7,7 @@ const fs = require('fs');
 const fsAsync = require('fs').promises;
 const path = require('path');
 const MongoClient = require('mongodb').MongoClient;
+const redis = require('redis');
 const util = require('util');
 const moment = require('moment');
 
@@ -23,6 +24,8 @@ const dbReadWriteUser = config['dbReadWriteUser'];
 const dbFormat = Object.freeze(util.format('mongodb://%%s:%%s@%s/%s', config['dbHost'], db));
 const dbReadOnlyUser = Object.freeze(config['dbReadOnlyUser']);
 const dbReadOnlyPassword = Object.freeze(config['dbReadOnlyPassword']);
+const redisHost = Object.freeze(config['redisHost']);
+const redisPassword = Object.freeze(config['redisPassword']);
 
 const app = express();
 
@@ -74,68 +77,104 @@ async function retrieveData(res) {
         return;
     }
 
+    // Node_redis manages connections internally, so this is async by nature.
+    // There's no need to wait for a connection to be established before calling an API.
+    let redisClient = redis.createClient(redisHost);
+    redisClient.auth(redisPassword);
+    let redisSelect = util.promisify(redisClient.select).bind(redisClient);
+    let redisGet = util.promisify(redisClient.get).bind(redisClient);
+    let redisSet = util.promisify(redisClient.set).bind(redisClient);
+
+    // The act of attaching an error listener prevents Node_redis' event loop
+    // crashing the app if there is an error.
+    redisClient.on("error", redisConnErr => {
+        console.warn("Error connecting to Redis - no caching! Error: " + redisConnErr);
+    });
+
     try {
         let data = {};
         let gasDb = client.db(db);
         let collections = await gasDb.listCollections().toArray();
         for (let collection of collections) {
             let car = collection['name'];
-            data[car] = {};
-            data[car]['transactions'] = new Array();
+            data[car] = null;
 
-            // Record the first and last fillup date to calculate average time between fills.
-            let firstDate = null;
-            let lastDate = null;
+            // Check Redis for cached data
+            try {
 
-            // Populate raw transaction data and calculate basic aggregate fields.
-            await gasDb.collection(car).find({}).sort({ date: -1 }).forEach(doc => {
-                // mpg and munny are generated (not stored in db)
-                doc['mpg'] = doc['miles'] / doc['gallons'];
-                doc['munny'] = doc['gallons'] * doc['pricePerGallon'];
+                await redisSelect(1);
+                data[car] = JSON.parse(await redisGet(car));
+            } catch (redisErr) {
+                console.warn("Redis error: " + redisErr);
+            }
 
-                // The data is sorted most recent to least.
-                if (lastDate === null) {
-                    lastDate = moment(doc['date']);
-                }
-                firstDate = moment(doc['date']);
+            if (data[car] === null) {
+                console.log("No cached data for " + car);
 
-                data[car]['transactions'].push(doc);
-            });
+                data[car] = {};
+                data[car]['transactions'] = new Array();
 
-            // Populate complex aggregate fields using MongoDB.
-            await gasDb.collection(car).aggregate([
-                {
-                    $group: {
-                        _id: null,
-                        numTransactions: { $sum: 1},
-                        avgMpg: { $avg: { $divide: ['$miles', '$gallons'] } },
-                        stdDevMpg: { $stdDevSamp: { $divide: ['$miles', '$gallons'] } },
-                        minMpg: { $min: { $divide: ['$miles', '$gallons'] } },
-                        maxMpg: { $max: { $divide: ['$miles', '$gallons'] } },
-                        totalMunny: { $sum: { $multiply: ['$gallons', '$pricePerGallon'] } },
-                        avgMunny: { $avg: { $multiply: ['$gallons', '$pricePerGallon'] } },
-                        stdDevMunny: { $stdDevSamp: { $multiply: ['$gallons', '$pricePerGallon'] } },
-                        totalGallons: { $sum: '$gallons' },
-                        avgGallons: { $avg: '$gallons' },
-                        stdDevGallons: { $stdDevSamp: '$gallons' },
-                        totalMiles: { $sum: '$miles' },
-                        avgMiles: { $avg: '$miles' },
-                        stdDevMiles: { $stdDevSamp: '$miles' },
-                        avgPricePerGallon: { $avg: '$pricePerGallon' },
-                        stdDevPricePerGallon: { $stdDevSamp: '$pricePerGallon' }
+                // Record the first and last fillup date to calculate average time between fills.
+                let firstDate = null;
+                let lastDate = null;
+
+                // Populate raw transaction data and calculate basic aggregate fields.
+                await gasDb.collection(car).find({}).sort({ date: -1 }).forEach(doc => {
+                    // mpg and munny are generated (not stored in db)
+                    doc['mpg'] = doc['miles'] / doc['gallons'];
+                    doc['munny'] = doc['gallons'] * doc['pricePerGallon'];
+
+                    // The data is sorted most recent to least.
+                    if (lastDate === null) {
+                        lastDate = moment(doc['date']);
                     }
-                }
-            ]).forEach(doc => {
-                for (let k in doc) {
-                    if (k !== '_id') {
-                        data[car][k] = doc[k];
-                    }
-                }
+                    firstDate = moment(doc['date']);
 
-                // Dividing the difference between the last and first dates and the
-                // number of transactions gives the average time between fills.
-                data[car]['avgTimeBetween'] = moment.duration(lastDate.diff(firstDate) / doc['numTransactions']).asDays();
-            });
+                    data[car]['transactions'].push(doc);
+                });
+
+                // Populate complex aggregate fields using MongoDB.
+                await gasDb.collection(car).aggregate([
+                    {
+                        $group: {
+                            _id: null,
+                            numTransactions: { $sum: 1},
+                            avgMpg: { $avg: { $divide: ['$miles', '$gallons'] } },
+                            stdDevMpg: { $stdDevSamp: { $divide: ['$miles', '$gallons'] } },
+                            minMpg: { $min: { $divide: ['$miles', '$gallons'] } },
+                            maxMpg: { $max: { $divide: ['$miles', '$gallons'] } },
+                            totalMunny: { $sum: { $multiply: ['$gallons', '$pricePerGallon'] } },
+                            avgMunny: { $avg: { $multiply: ['$gallons', '$pricePerGallon'] } },
+                            stdDevMunny: { $stdDevSamp: { $multiply: ['$gallons', '$pricePerGallon'] } },
+                            totalGallons: { $sum: '$gallons' },
+                            avgGallons: { $avg: '$gallons' },
+                            stdDevGallons: { $stdDevSamp: '$gallons' },
+                            totalMiles: { $sum: '$miles' },
+                            avgMiles: { $avg: '$miles' },
+                            stdDevMiles: { $stdDevSamp: '$miles' },
+                            avgPricePerGallon: { $avg: '$pricePerGallon' },
+                            stdDevPricePerGallon: { $stdDevSamp: '$pricePerGallon' }
+                        }
+                    }
+                ]).forEach(doc => {
+                    for (let k in doc) {
+                        if (k !== '_id') {
+                            data[car][k] = doc[k];
+                        }
+                    }
+
+                    // Dividing the difference between the last and first dates and the
+                    // number of transactions gives the average time between fills.
+                    data[car]['avgTimeBetween'] = moment.duration(lastDate.diff(firstDate) / doc['numTransactions']).asDays();
+                });
+
+                // Cache data in redis
+                try {
+                    await redisSet(car, JSON.stringify(data[car]));
+                } catch (redisErr2) {
+                    // Don't log anything. Any error will have already surfaced.
+                }
+            }
         }
 
         res.send(data);
@@ -143,6 +182,7 @@ async function retrieveData(res) {
         res.send(err);
     } finally {
         client.close();
+        redisClient.quit();
     }
 }
 
@@ -179,8 +219,23 @@ app.post('/submit', async (req, res) => {
         return;
     }
 
+    let redisClient = redis.createClient(redisHost);
+    redisClient.auth(redisPassword);
+    let redisSelect = util.promisify(redisClient.select).bind(redisClient);
+    let redisDel = util.promisify(redisClient.del).bind(redisClient);
+    redisClient.on("error", redisConnErr => {
+    });
+
     try {
         await client.db(db).collection(req.body.car).insertOne(transaction);
+
+        // Invalidate redis cache for car
+        try {
+            await redisSelect(1);
+            await redisDel(req.body.car);
+        } catch (redisErr) {
+            console.warn("Failed to delete entry from redis. Presented data could be stale!");
+        }
 
         // Trigger another full retrieve.
         await retrieveData(res);
@@ -188,6 +243,7 @@ app.post('/submit', async (req, res) => {
         res.send(err);
     } finally {
         client.close();
+        redisClient.quit();
     }
 });
 

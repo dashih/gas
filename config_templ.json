@@ -7,5 +7,7 @@
     "db": "",
     "dbReadWriteUser": "",
     "dbReadOnlyUser": "",
-    "dbReadOnlyPassword": ""
+    "dbReadOnlyPassword": "",
+    "redisHost",
+    "redisPassword"
 }
