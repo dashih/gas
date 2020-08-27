@@ -47,18 +47,16 @@ redisClient.on("error", redisErr => {
 
 // Mongo helper functions
 async function getMongoClient(user, password) {
-    let client = await MongoClient.connect(
+    return await MongoClient.connect(
         util.format(dbFormat, user, encodeURIComponent(password)),
-        { useNewUrlParser: true, useUnifiedTopology: true });
-    client.catch(connErr => {
-        console.error(connErr);
-    });
-
-    return client;
+        { useNewUrlParser: true, useUnifiedTopology: true })
+        .catch(connErr => {
+            console.error(connErr);
+        });
 }
 
 async function getReadOnlyMongoClient() {
-    return await getMongoClientHelper(dbReadOnlyUser, dbReadOnlyPassword);
+    return await getMongoClient(dbReadOnlyUser, dbReadOnlyPassword);
 }
 
 app.get('/getVersion', async (req, res) => {
@@ -77,7 +75,7 @@ app.get('/getVersion', async (req, res) => {
 
             let fullOsVersion = await fsAsync.readFile('/etc/centos-release', 'utf8');
             let osVersion = fullOsVersion.match(/[0-9,\.]+/)[0];
-            let client = getReadOnlyMongoClient();
+            let client = await getReadOnlyMongoClient();
             if (client == null) {
                 res.status(500).send("Error connecting to MongoDB. See logs.");
                 return;
@@ -115,7 +113,7 @@ app.get('/getVersion', async (req, res) => {
 async function retrieveData(res) {
     let startTime = moment();
 
-    let client = getReadOnlyMongoClient();
+    let client = await getReadOnlyMongoClient();
     if (client == null) {
         res.status(500).send("Error connecting to MongoDB. See logs.");
         return;
@@ -228,7 +226,7 @@ app.post('/submit', async (req, res) => {
     transaction['date'] = new Date();
 
     // Write to db.
-    let client = getMongoClient(dbReadWriteUser, dbRwPassword);
+    let client = await getMongoClient(dbReadWriteUser, dbRwPassword);
     if (client == null) {
         res.status(500).send("Error connecting to MongoDB. See logs.");
         return;
