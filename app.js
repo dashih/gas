@@ -48,14 +48,25 @@ app.get('/getVersion', async (req, res) => {
         return;
     }
 
+    let redisClient = redis.createClient(redisHost);
+    redisClient.auth(redisPassword);
+    let redisOn = util.promisify(redisClient.on).bind(redisClient);
+    redisClient.on("error", redisConnErr => {
+        console.warn(redisConnErr);
+        redisClient.quit();
+    });
+
     try {
         let mongoInfo = await client.db(db).admin().serverInfo();
+        await redisOn("ready");
         res.send({
             osVersion: osVersion,
             appVersion: packageJson['version'],
             nodeVersion: process.version,
             mongoVersion: mongoInfo.version,
             mongoClientVersion: packageJson['dependencies']['mongodb'],
+            redisVersion: redisClient.server_info.redis_version,
+            redisClientVersion: packageJson['dependencies']['redis'],
             expressVersion: packageJson['dependencies']['express']
         });
     } catch (err) {
@@ -63,6 +74,7 @@ app.get('/getVersion', async (req, res) => {
         res.status(500).send(err);
     } finally {
         client.close();
+        redisClient.quit();
     }
 });
 

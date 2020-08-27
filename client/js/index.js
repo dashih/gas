@@ -66,10 +66,14 @@ function requestVersion() {
             '<br />' +
             'CentOS ' + data.osVersion + ' | ' +
             'Node.js ' + data.nodeVersion + ' | ' +
-            'MongoDB server ' + data.mongoVersion +
             '<br />' +
-            'Express ' + data.expressVersion + ' | ' +
-            'MongoDB client ' + data.mongoClientVersion +
+            'MongoDB server ' + data.mongoVersion + ' | ' +
+            'Redis server ' + data.redisVersion +
+            '<br />' +
+            'Express ' + data.expressVersion +
+            '<br />' +
+            'MongoDB client ' + data.mongoClientVersion + ' | ' +
+            'Redis client ' + data.redisClientVersion +
             '<br />' +
             'jQuery ' + jQuery().jquery + ' | ' +
             'Bootstrap 4.5.0')
