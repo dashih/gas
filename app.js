@@ -45,6 +45,22 @@ redisClient.on("error", redisErr => {
     console.warn("Redis error. There may be problems with stale data. " + redisErr);
 });
 
+// Mongo helper functions
+async function getMongoClient(user, password) {
+    let client = await MongoClient.connect(
+        util.format(dbFormat, user, encodeURIComponent(password)),
+        { useNewUrlParser: true, useUnifiedTopology: true });
+    client.catch(connErr => {
+        console.error(connErr);
+    });
+
+    return client;
+}
+
+async function getReadOnlyMongoClient() {
+    return await getMongoClientHelper(dbReadOnlyUser, dbReadOnlyPassword);
+}
+
 app.get('/getVersion', async (req, res) => {
     let packageJson = JSON.parse(await fsAsync.readFile('package.json', 'utf8'));
     let appVersion = packageJson['version'];
@@ -61,14 +77,9 @@ app.get('/getVersion', async (req, res) => {
 
             let fullOsVersion = await fsAsync.readFile('/etc/centos-release', 'utf8');
             let osVersion = fullOsVersion.match(/[0-9,\.]+/)[0];
-            let client = await MongoClient.connect(
-                util.format(dbFormat, dbReadOnlyUser, encodeURIComponent(dbReadOnlyPassword)),
-                { useNewUrlParser: true, useUnifiedTopology: true })
-                .catch(connErr => {
-                    console.error(connErr);
-                    res.status(500).send(connErr);
-                });
+            let client = getReadOnlyMongoClient();
             if (client == null) {
+                res.status(500).send("Error connecting to MongoDB. See logs.");
                 return;
             }
 
@@ -104,14 +115,9 @@ app.get('/getVersion', async (req, res) => {
 async function retrieveData(res) {
     let startTime = moment();
 
-    let client = await MongoClient.connect(
-        util.format(dbFormat, dbReadOnlyUser, encodeURIComponent(dbReadOnlyPassword)),
-        { useNewUrlParser: true, useUnifiedTopology: true })
-        .catch(connErr => {
-            console.error(connErr);
-            res.status(500).send(connErr);
-        });
+    let client = getReadOnlyMongoClient();
     if (client == null) {
+        res.status(500).send("Error connecting to MongoDB. See logs.");
         return;
     }
 
@@ -198,7 +204,7 @@ async function retrieveData(res) {
             "duration": duration
         });
     } catch (err) {
-        res.send(err);
+        res.status(500).send(err);
     } finally {
         client.close();
     }
@@ -222,18 +228,9 @@ app.post('/submit', async (req, res) => {
     transaction['date'] = new Date();
 
     // Write to db.
-    let client = await MongoClient.connect(
-        util.format(dbFormat, dbReadWriteUser, encodeURIComponent(dbRwPassword)),
-        { useNewUrlParser: true, useUnifiedTopology: true })
-        .catch(connErr => {
-            console.error(connErr);
-            if (connErr.message.includes("Authentication failed")) {
-                res.status(403).send('Wrong password!');
-            } else {
-                res.status(500).send(connErr);
-            }
-        });
+    let client = getMongoClient(dbReadWriteUser, dbRwPassword);
     if (client == null) {
+        res.status(500).send("Error connecting to MongoDB. See logs.");
         return;
     }
 
