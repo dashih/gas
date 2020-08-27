@@ -28,22 +28,28 @@ const redisHost = Object.freeze(config['redisHost']);
 const redisPassword = Object.freeze(config['redisPassword']);
 const redisDb = config['redisDb'];
 
+// Setup express
 const app = express();
-
 app.use(express.static('client'));
 app.use(bodyParser.json());
+
+// Setup redis. The redis module manages connections automatically and we do not
+// need multiple users, so we can just create one global client.
+const redisClient = redis.createClient(redisHost);
+redisClient.auth(redisPassword);
+const redisSelect = util.promisify(redisClient.select).bind(redisClient);
+const redisGet = util.promisify(redisClient.get).bind(redisClient);
+const redisSet = util.promisify(redisClient.set).bind(redisClient);
+const redisDel = util.promisify(redisClient.del).bind(redisClient);
+redisClient.on("error", redisErr => {
+    console.warn("Redis error. There may be problems with stale data. " + redisErr);
+});
 
 app.get('/getVersion', async (req, res) => {
     let packageJson = JSON.parse(await fsAsync.readFile('package.json', 'utf8'));
     let appVersion = packageJson['version'];
 
     // Check redis with app version as the key.
-    let redisClient = redis.createClient(redisHost);
-    redisClient.auth(redisPassword);
-    let redisSelect = util.promisify(redisClient.select).bind(redisClient);
-    let redisGet = util.promisify(redisClient.get).bind(redisClient);
-    let redisSet = util.promisify(redisClient.set).bind(redisClient);
-    redisClient.on("error", redisConnErr => { });
     let versions = null;
     try {
         await redisSelect(redisDb);
@@ -92,8 +98,6 @@ app.get('/getVersion', async (req, res) => {
     } catch (redisErr) {
         console.error(redisErr);
         res.status(500).send(redisErr);
-    } finally {
-        redisClient.quit();
     }
 });
 
@@ -110,17 +114,6 @@ async function retrieveData(res) {
     if (client == null) {
         return;
     }
-
-    // Node_redis manages connections internally, so this is async by nature.
-    // There's no need to wait for a connection to be established before calling an API.
-    let redisClient = redis.createClient(redisHost);
-    redisClient.auth(redisPassword);
-    let redisSelect = util.promisify(redisClient.select).bind(redisClient);
-    let redisGet = util.promisify(redisClient.get).bind(redisClient);
-    let redisSet = util.promisify(redisClient.set).bind(redisClient);
-
-    // The act of attaching an error listener suppresses errors thrown from event loop.
-    redisClient.on("error", redisConnErr => { });
 
     try {
         let data = {};
@@ -195,7 +188,6 @@ async function retrieveData(res) {
                 });
 
                 // Cache data in redis
-                await redisSelect(redisDb);
                 await redisSet(car, JSON.stringify(data[car]));
             }
         }
@@ -209,7 +201,6 @@ async function retrieveData(res) {
         res.send(err);
     } finally {
         client.close();
-        redisClient.quit();
     }
 }
 
@@ -246,13 +237,6 @@ app.post('/submit', async (req, res) => {
         return;
     }
 
-    let redisClient = redis.createClient(redisHost);
-    redisClient.auth(redisPassword);
-    let redisSelect = util.promisify(redisClient.select).bind(redisClient);
-    let redisDel = util.promisify(redisClient.del).bind(redisClient);
-    redisClient.on("error", redisConnErr => {
-    });
-
     try {
         await client.db(db).collection(req.body.car).insertOne(transaction);
 
@@ -270,7 +254,6 @@ app.post('/submit', async (req, res) => {
         res.send(err);
     } finally {
         client.close();
-        redisClient.quit();
     }
 });
 
