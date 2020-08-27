@@ -117,11 +117,8 @@ async function retrieveData(res) {
     let redisGet = util.promisify(redisClient.get).bind(redisClient);
     let redisSet = util.promisify(redisClient.set).bind(redisClient);
 
-    // The act of attaching an error listener prevents Node_redis' event loop
-    // crashing the app if there is an error.
-    redisClient.on("error", redisConnErr => {
-        console.warn("Error connecting to Redis - no caching! Error: " + redisConnErr);
-    });
+    // The act of attaching an error listener suppresses errors thrown from event loop.
+    redisClient.on("error", redisConnErr => { });
 
     try {
         let data = {};
@@ -132,12 +129,8 @@ async function retrieveData(res) {
             data[car] = null;
 
             // Check Redis for cached data
-            try {
-                await redisSelect(redisDb);
-                data[car] = JSON.parse(await redisGet(car));
-            } catch (redisErr) {
-                console.warn("Redis error: " + redisErr);
-            }
+            await redisSelect(redisDb);
+            data[car] = JSON.parse(await redisGet(car));
 
             if (data[car] === null) {
                 console.log("No cached data for " + car);
@@ -200,12 +193,8 @@ async function retrieveData(res) {
                 });
 
                 // Cache data in redis
-                try {
-                    await redisSelect(redisDb);
-                    await redisSet(car, JSON.stringify(data[car]));
-                } catch (redisErr2) {
-                    // Don't log anything. Any error will have already surfaced.
-                }
+                await redisSelect(redisDb);
+                await redisSet(car, JSON.stringify(data[car]));
             }
         }
 
