@@ -34,46 +34,63 @@ app.use(express.static('client'));
 app.use(bodyParser.json());
 
 app.get('/getVersion', async (req, res) => {
-    let fullOsVersion = await fsAsync.readFile('/etc/centos-release', 'utf8');
-    let osVersion = fullOsVersion.match(/[0-9,\.]+/)[0];
     let packageJson = JSON.parse(await fsAsync.readFile('package.json', 'utf8'));
-    let client = await MongoClient.connect(
-        util.format(dbFormat, dbReadOnlyUser, encodeURIComponent(dbReadOnlyPassword)),
-        { useNewUrlParser: true, useUnifiedTopology: true })
-        .catch(connErr => {
-            console.error(connErr);
-            res.status(500).send(connErr);
-        });
-    if (client == null) {
-        return;
-    }
+    let appVersion = packageJson['version'];
 
+    // Check redis with app version as the key.
     let redisClient = redis.createClient(redisHost);
     redisClient.auth(redisPassword);
-    let redisOn = util.promisify(redisClient.on).bind(redisClient);
-    redisClient.on("error", redisConnErr => {
-        console.warn(redisConnErr);
-        redisClient.quit();
-    });
-
+    let redisSelect = util.promisify(redisClient.select).bind(redisClient);
+    let redisGet = util.promisify(redisClient.get).bind(redisClient);
+    let redisSet = util.promisify(redisClient.set).bind(redisClient);
+    redisClient.on("error", redisConnErr => { });
+    let versions = null;
     try {
-        let mongoInfo = await client.db(db).admin().serverInfo();
-        await redisOn("ready");
-        res.send({
-            osVersion: osVersion,
-            appVersion: packageJson['version'],
-            nodeVersion: process.version,
-            mongoVersion: mongoInfo.version,
-            mongoClientVersion: packageJson['dependencies']['mongodb'],
-            redisVersion: redisClient.server_info.redis_version,
-            redisClientVersion: packageJson['dependencies']['redis'],
-            expressVersion: packageJson['dependencies']['express']
-        });
-    } catch (err) {
-        console.error(err);
-        res.status(500).send(err);
+        await redisSelect(redisDb);
+        versions = JSON.parse(await redisGet(appVersion));
+
+        // If there is no versions string cached for this app version, generate.
+        if (versions === null) {
+            let fullOsVersion = await fsAsync.readFile('/etc/centos-release', 'utf8');
+            let osVersion = fullOsVersion.match(/[0-9,\.]+/)[0];
+            let client = await MongoClient.connect(
+                util.format(dbFormat, dbReadOnlyUser, encodeURIComponent(dbReadOnlyPassword)),
+                { useNewUrlParser: true, useUnifiedTopology: true })
+                .catch(connErr => {
+                    console.error(connErr);
+                    res.status(500).send(connErr);
+                });
+            if (client == null) {
+                return;
+            }
+
+            try {
+                let mongoInfo = await client.db(db).admin().serverInfo();
+                versions = {
+                    osVersion: osVersion,
+                    appVersion: appVersion,
+                    nodeVersion: process.version,
+                    mongoVersion: mongoInfo.version,
+                    mongoClientVersion: packageJson['dependencies']['mongodb'],
+                    redisVersion: redisClient.server_info.redis_version,
+                    redisClientVersion: packageJson['dependencies']['redis'],
+                    expressVersion: packageJson['dependencies']['express']
+                };
+
+                await redisSet(appVersion, JSON.stringify(versions));
+            } catch (err) {
+                console.error(err);
+                res.status(500).send(err);
+            } finally {
+                client.close();
+            }
+        }
+
+        res.send(versions);
+    } catch (redisErr) {
+        console.error(redisErr);
+        res.status(500).send(redisErr);
     } finally {
-        client.close();
         redisClient.quit();
     }
 });
@@ -116,7 +133,6 @@ async function retrieveData(res) {
 
             // Check Redis for cached data
             try {
-
                 await redisSelect(redisDb);
                 data[car] = JSON.parse(await redisGet(car));
             } catch (redisErr) {
