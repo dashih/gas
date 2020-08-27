@@ -94,7 +94,7 @@ function requestCarData() {
 }
 
 function requestSuccessHandler(jsonData) {
-    cachedData = jsonData;
+    cachedData = jsonData["data"];
     let numCars = Object.keys(cachedData).length;
     if (numCars === 0) {
         reportStatus(Status.Success, "No transactions yet!");
@@ -106,7 +106,7 @@ function requestSuccessHandler(jsonData) {
         totalTransactions += cachedData[k].transactions.length;
     });
 
-    reportStatus(Status.Success, 'Retrieved ' + totalTransactions + ' entries for ' + numCars + ' cars');
+    reportStatus(Status.Success, 'Retrieved ' + totalTransactions + ' entries for ' + numCars + ' cars (' + jsonData["duration"] + ' ms)');
     refresh();
 }
 

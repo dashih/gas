@@ -51,6 +51,8 @@ app.get('/getVersion', async (req, res) => {
 
         // If there is no versions string cached for this app version, generate.
         if (versions === null) {
+            console.log("No versions string found in cache");
+
             let fullOsVersion = await fsAsync.readFile('/etc/centos-release', 'utf8');
             let osVersion = fullOsVersion.match(/[0-9,\.]+/)[0];
             let client = await MongoClient.connect(
@@ -198,15 +200,17 @@ async function retrieveData(res) {
             }
         }
 
-        res.send(data);
+        let duration = moment().diff(startTime, "milliseconds");
+        res.send({
+            "data": data,
+            "duration": duration
+        });
     } catch (err) {
         res.send(err);
     } finally {
         client.close();
         redisClient.quit();
     }
-
-    console.log("Retrieve operation took " + moment().diff(startTime, "milliseconds") + " ms");
 }
 
 app.post('/request', async (req, res) => {
