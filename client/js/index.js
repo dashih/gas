@@ -65,10 +65,10 @@ function requestVersion() {
             'v' + data.appVersion +
             '<br />' +
             'CentOS ' + data.osVersion + ' | ' +
-            'Node.js ' + data.nodeVersion + ' | ' +
+            'Node.js ' + data.nodeVersion +
             '<br />' +
-            'MongoDB server ' + data.mongoVersion + ' | ' +
-            'Redis server ' + data.redisVersion +
+            'MongoDB ' + data.mongoVersion + ' | ' +
+            'Redis ' + data.redisVersion +
             '<br />' +
             'Express ' + data.expressVersion +
             '<br />' +
