@@ -202,8 +202,8 @@ function submitButtonClick() {
 }
 
 function submitSuccessHandler(jsonData) {
-    reportStatus(Status.Success, 'Successfully posted transaction');
-    cachedData = jsonData;
+    cachedData = jsonData["data"];
+    reportStatus(Status.Success, 'Successfully posted transaction (' + jsonData["duration"] + ' ms)');
     refresh();
 }
 
