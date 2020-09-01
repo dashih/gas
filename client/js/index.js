@@ -115,6 +115,9 @@ function refresh() {
 
     let carData = cachedData[car];
 
+    // Show car date range.
+    $('#currentCarDateRange').text(carData['dateRange']);
+
     // Clear the table.
     $('#transactionsTable > tbody:last').children().remove();
     $('#summary').children().remove();

@@ -186,9 +186,18 @@ async function retrieveData(res) {
                         }
                     }
 
+                    let firstLastDiff = lastDate.diff(firstDate);
+
                     // Dividing the difference between the last and first dates and the
                     // number of transactions gives the average time between fills.
-                    data[car]['avgTimeBetween'] = moment.duration(lastDate.diff(firstDate) / doc['numTransactions']).asDays();
+                    data[car]['avgTimeBetween'] = moment.duration(firstLastDiff / doc['numTransactions']).asDays();
+
+                    // Populate date range string.
+                    data[car]['dateRange'] = util.format(
+                        "%s years (%s to %s)",
+                        moment.duration(firstLastDiff).asYears().toFixed(1),
+                        firstDate.format("MMM YYYY"),
+                        lastDate.format("MMM YYYY"));
                 });
 
                 // Cache data in redis
