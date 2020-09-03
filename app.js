@@ -227,10 +227,10 @@ app.post('/submit', async (req, res) => {
 
     let car = req.body.car;
 
-    // Delete the password field since we only use that to auth with the db.
+    // Delete the passwordHash field.
     // Delete the car field, because we use a MongoDB collection for each car.
     let transaction = JSON.parse(JSON.stringify(req.body));
-    delete transaction.password;
+    delete transaction.passwordHash;
     delete transaction.car;
 
     // Set the date field to now.
