@@ -6,6 +6,7 @@ var Status = Object.freeze({
     'Processing': 2,
     'Error': 3
 });
+var submitStart = null;
 
 function reportStatus(status, msg) {
     $('#errorFooter').hide();
@@ -173,6 +174,8 @@ function hideFormButtonClick() {
 }
 
 async function submitButtonClick() {
+    submitStart = new Date();
+
     let password = $('#password').val();
     let miles = parseFloat($('#miles').val());
     let gallons = parseFloat($('#gallons').val());
@@ -220,8 +223,9 @@ async function submitButtonClick() {
 }
 
 function submitSuccessHandler(jsonData) {
+    let durationMs = new Date() - submitStart;
     cachedData = jsonData["data"];
-    reportStatus(Status.Success, 'Successfully posted transaction (' + jsonData["duration"] + ' ms)');
+    reportStatus(Status.Success, 'Successfully posted transaction (' + durationMs + ' ms)');
     refresh();
 }
 
