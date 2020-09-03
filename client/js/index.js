@@ -172,7 +172,7 @@ function hideFormButtonClick() {
     showForm(false);
 }
 
-function submitButtonClick() {
+async function submitButtonClick() {
     let password = $('#password').val();
     let miles = parseFloat($('#miles').val());
     let gallons = parseFloat($('#gallons').val());
@@ -182,8 +182,25 @@ function submitButtonClick() {
         return;
     }
 
+    showForm(false);
+    reportStatus(Status.Processing, null);
+
+    // Hash the password using argon2. Parameters require ~10s on iPhone X.
+    let passwordNormalized = password.normalize("NFC");
+    let salt = new Uint32Array(16);
+    window.crypto.getRandomValues(salt);
+    let passwordHash = await argon2.hash({
+        pass: passwordNormalized,
+        salt: salt,
+        mem: 131072, // 128 MB                                                                                                                             
+        time: 16,
+        hashLen: 128,
+        parallelism: 4,
+        type: argon2.ArgonType.Argon2d
+    });
+
     let payload = {
-        'password': password,
+        'passwordHash': passwordHash.encoded,
         'car': car,
         'miles': miles,
         'gallons': gallons,
@@ -191,8 +208,6 @@ function submitButtonClick() {
         'comments': $('#comments').val()
     };
 
-    showForm(false);
-    reportStatus(Status.Processing, null);
     $.ajax({
         type: 'POST',
         contentType: 'application/json',

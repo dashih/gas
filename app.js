@@ -7,6 +7,7 @@ const fs = require('fs');
 const fsAsync = require('fs').promises;
 const path = require('path');
 const MongoClient = require('mongodb').MongoClient;
+const argon2 = require('argon2');
 const redis = require('redis');
 const util = require('util');
 const moment = require('moment');
@@ -19,11 +20,11 @@ const httpsOptions = {
     cert: fs.readFileSync(config['sslCertFile']),
     ca: fs.readFileSync(config['sslCaFile'])
 };
+const submitPassword = config['submitPassword'].normalize();
 const db = config['db'];
-const dbReadWriteUser = config['dbReadWriteUser'];
+const dbUser = config['dbUser'];
+const dbPassword = Object.freeze(config['dbPassword']);
 const dbFormat = Object.freeze(util.format('mongodb://%%s:%%s@%s/%s', config['dbHost'], db));
-const dbReadOnlyUser = Object.freeze(config['dbReadOnlyUser']);
-const dbReadOnlyPassword = Object.freeze(config['dbReadOnlyPassword']);
 const redisHost = Object.freeze(config['redisHost']);
 const redisPassword = Object.freeze(config['redisPassword']);
 const redisDb = config['redisDb'];
@@ -45,18 +46,13 @@ redisClient.on("error", redisErr => {
     console.warn("Redis error. There may be problems with stale data. " + redisErr);
 });
 
-// Mongo helper functions
-async function getMongoClient(user, password) {
+async function getMongoClient() {
     return await MongoClient.connect(
-        util.format(dbFormat, user, encodeURIComponent(password)),
+        util.format(dbFormat, dbUser, encodeURIComponent(dbPassword)),
         { useNewUrlParser: true, useUnifiedTopology: true })
         .catch(connErr => {
             console.error(connErr);
         });
-}
-
-async function getReadOnlyMongoClient() {
-    return await getMongoClient(dbReadOnlyUser, dbReadOnlyPassword);
 }
 
 app.get('/getVersion', async (req, res) => {
@@ -75,7 +71,7 @@ app.get('/getVersion', async (req, res) => {
 
             let fullOsVersion = await fsAsync.readFile('/etc/centos-release', 'utf8');
             let osVersion = fullOsVersion.match(/[0-9,\.]+/)[0];
-            let client = await getReadOnlyMongoClient();
+            let client = await getMongoClient();
             if (client == null) {
                 res.status(500).send("Error connecting to MongoDB. See logs.");
                 return;
@@ -113,7 +109,7 @@ app.get('/getVersion', async (req, res) => {
 async function retrieveData(res) {
     let startTime = moment();
 
-    let client = await getReadOnlyMongoClient();
+    let client = await getMongoClient();
     if (client == null) {
         res.status(500).send("Error connecting to MongoDB. See logs.");
         return;
@@ -222,7 +218,13 @@ app.post('/request', async (req, res) => {
 });
 
 app.post('/submit', async (req, res) => {
-    let dbRwPassword = req.body.password;
+    // Check the password.
+    let passwordHash = req.body.passwordHash.normalize("NFC");
+    if (!await argon2.verify(passwordHash, submitPassword)) {
+        res.status(500).send("Wrong password");
+        return;
+    }
+
     let car = req.body.car;
 
     // Delete the password field since we only use that to auth with the db.
@@ -235,7 +237,7 @@ app.post('/submit', async (req, res) => {
     transaction['date'] = new Date();
 
     // Write to db.
-    let client = await getMongoClient(dbReadWriteUser, dbRwPassword);
+    let client = await getMongoClient();
     if (client == null) {
         res.status(500).send("Error connecting to MongoDB. See logs.");
         return;
