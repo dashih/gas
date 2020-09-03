@@ -20,14 +20,14 @@ const httpsOptions = {
     cert: fs.readFileSync(config['sslCertFile']),
     ca: fs.readFileSync(config['sslCaFile'])
 };
-const submitPassword = config['submitPassword'].normalize();
-const db = config['db'];
-const dbUser = config['dbUser'];
+const submitPassword = Object.freeze(config['submitPassword'].normalize());
+const db = Object.freeze(config['db']);
+const dbUser = Object.freeze(config['dbUser']);
 const dbPassword = Object.freeze(config['dbPassword']);
 const dbFormat = Object.freeze(util.format('mongodb://%%s:%%s@%s/%s', config['dbHost'], db));
 const redisHost = Object.freeze(config['redisHost']);
 const redisPassword = Object.freeze(config['redisPassword']);
-const redisDb = config['redisDb'];
+const redisDb = Object.freeze(config['redisDb']);
 
 // Setup express
 const app = express();
