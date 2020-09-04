@@ -84,9 +84,7 @@ app.get('/getVersion', async (req, res) => {
                     appVersion: appVersion,
                     nodeVersion: process.version,
                     mongoVersion: mongoInfo.version,
-                    mongoClientVersion: packageJson['dependencies']['mongodb'],
                     redisVersion: redisClient.server_info.redis_version,
-                    redisClientVersion: packageJson['dependencies']['redis'],
                     expressVersion: packageJson['dependencies']['express']
                 };
 

@@ -73,9 +73,6 @@ function requestVersion() {
             '<br />' +
             'Express ' + data.expressVersion +
             '<br />' +
-            'MongoDB client ' + data.mongoClientVersion + ' | ' +
-            'Redis client ' + data.redisClientVersion +
-            '<br />' +
             'jQuery ' + jQuery().jquery + ' | ' +
             'Bootstrap 4.5.0')
     });
