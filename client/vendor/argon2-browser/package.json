@@ -1,0 +1,59 @@
+{
+  "_from": "argon2-browser",
+  "_id": "argon2-browser@1.15.1",
+  "_inBundle": false,
+  "_integrity": "sha512-7k8HvHjbvvdHVc1UbH6QFeAW4dvjqevzem4PJLeAcvTZz2QQ0S+6lAG4ii7KAkn5bDpzuL53eaQBaiky04cPLA==",
+  "_location": "/argon2-browser",
+  "_phantomChildren": {},
+  "_requested": {
+    "type": "tag",
+    "registry": true,
+    "raw": "argon2-browser",
+    "name": "argon2-browser",
+    "escapedName": "argon2-browser",
+    "rawSpec": "",
+    "saveSpec": null,
+    "fetchSpec": "latest"
+  },
+  "_requiredBy": [
+    "#USER",
+    "/"
+  ],
+  "_resolved": "https://registry.npmjs.org/argon2-browser/-/argon2-browser-1.15.1.tgz",
+  "_shasum": "3a266e1e1eb25d696f1482a99db963efc4e590c1",
+  "_spec": "argon2-browser",
+  "_where": "/var/www/nodejs/gas",
+  "author": {
+    "name": "Antelle"
+  },
+  "bugs": {
+    "url": "https://github.com/antelle/argon2-browser/issues"
+  },
+  "bundleDependencies": false,
+  "deprecated": false,
+  "description": "Argon2 library compiled for browser runtime",
+  "devDependencies": {
+    "chai": "^4.2.0",
+    "http-server": "^0.12.3",
+    "mocha": "^8.1.1",
+    "prettier": "^2.0.5",
+    "puppeteer": "^5.2.1"
+  },
+  "directories": {
+    "doc": "docs",
+    "lib": "lib"
+  },
+  "homepage": "https://github.com/antelle/argon2-browser#readme",
+  "license": "MIT",
+  "main": "lib/argon2.js",
+  "name": "argon2-browser",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/antelle/argon2-browser.git"
+  },
+  "scripts": {
+    "prepare-deployment": "node ci/prepare-deployment",
+    "test": "mocha"
+  },
+  "version": "1.15.1"
+}
