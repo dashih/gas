@@ -22,7 +22,7 @@
   },
   "homepage": "https://github.com/dashih/gas#readme",
   "dependencies": {
-    "argon2": "^0.27.0",
+    "argon2": "^0.27.1",
     "express": "^4.17.1",
     "https": "^1.0.0",
     "moment": "^2.29.1",
