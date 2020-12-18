@@ -8,7 +8,7 @@
     "db": "",
     "dbUser": "",
     "dbPassword": "",
-    "redisHost",
-    "redisPassword",
-    "redisDb"
+    "redisHost": "",
+    "redisPassword": "",
+    "redisDb": ""
 }
