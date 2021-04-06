@@ -4,9 +4,9 @@ After=mongod.service
 
 [Service]
 Type=simple
-User=root
-WorkingDirectory=/opt/www/gas
-ExecStart=/usr/bin/node /opt/www/gas/app.js
+User=dss4f
+WorkingDirectory=<dir>
+ExecStart=/usr/bin/node <dir>
 Restart=always
 Environment=NODE_ENV=production
 
