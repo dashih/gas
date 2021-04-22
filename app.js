@@ -11,6 +11,7 @@ const argon2 = require('argon2');
 const redis = require('redis');
 const util = require('util');
 const moment = require('moment');
+const axios = require('axios');
 
 // Parse config
 const config = JSON.parse(fs.readFileSync('config.json', 'utf8'));
@@ -28,6 +29,10 @@ const dbFormat = Object.freeze(util.format('mongodb://%%s:%%s@%s/%s', config['db
 const redisHost = Object.freeze(config['redisHost']);
 const redisPassword = Object.freeze(config['redisPassword']);
 const redisDb = Object.freeze(config['redisDb']);
+const openExchangeRatesUrl = Object.freeze(
+    util.format(
+        'https://openexchangerates.org/api/latest.json?app_id=%s',
+        config['openExchangeRatesAppId']));
 
 // Setup express
 const app = express();
@@ -230,6 +235,23 @@ app.post('/submit', async (req, res) => {
     let transaction = JSON.parse(JSON.stringify(req.body));
     delete transaction.passwordHash;
     delete transaction.car;
+
+    // Convert Canadian units (CAD, liters) to US, if necessary.
+    if (transaction.country === 'CA') {
+        const gallonsPerLiter = 0.264172;
+        try {
+            const res = await axios.get(openExchangeRatesUrl);
+            const cadPerUsd = res.data.rates.CAD;
+            console.log(util.format('exchange rate retrieved: %s CAD per 1 USD', cadPerUsd));
+
+            transaction['gallons'] = transaction['gallons'] * gallonsPerLiter;
+            transaction['pricePerGallon'] = transaction['pricePerGallon'] / (cadPerUsd * gallonsPerLiter);
+        } catch (err) {
+            res.status(500).send('Error retrieving currency exchange rates.');
+            console.error(err);
+            return;
+        }
+    }
 
     // Set the date field to now.
     transaction['date'] = new Date();

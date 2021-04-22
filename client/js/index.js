@@ -7,6 +7,7 @@ var Status = Object.freeze({
     'Error': 3
 });
 var submitStart = null;
+var canada = false;
 
 function reportStatus(status, msg) {
     $('#errorFooter').hide();
@@ -170,6 +171,12 @@ function hideFormButtonClick() {
     showForm(false);
 }
 
+function canadaButtonClick() {
+    $('#gallons').attr('placeholder', 'Liters');
+    $('#pricePerGallon').attr('placeholder', 'CAD per liter');
+    canada = true;
+}
+
 async function submitButtonClick() {
     submitStart = new Date();
 
@@ -205,7 +212,8 @@ async function submitButtonClick() {
         'miles': miles,
         'gallons': gallons,
         'pricePerGallon': pricePerGallon,
-        'comments': $('#comments').val()
+        'comments': $('#comments').val(),
+        'country': canada ? 'CA' : 'US'
     };
 
     $.ajax({
@@ -234,6 +242,7 @@ $(document).ready(() => {
     requestVersion();
     $('#showFormButton').click(showFormButtonClick);
     $('#hideFormButton').click(hideFormButtonClick);
+    $('#canadaButton').click(canadaButtonClick);
     $('#submitButton').click(submitButtonClick);
     $('#carSelector').change(carSelectorChanged);
     showForm(false);
