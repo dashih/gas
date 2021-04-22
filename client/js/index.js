@@ -69,8 +69,7 @@ function requestVersion() {
             'CentOS ' + data.osVersion + ' | ' +
             'Node.js ' + data.nodeVersion +
             '<br />' +
-            'MongoDB ' + data.mongoVersion + ' | ' +
-            'Redis ' + data.redisVersion +
+            'MongoDB ' + data.mongoVersion +
             '<br />' +
             'Express ' + data.expressVersion +
             '<br />' +
