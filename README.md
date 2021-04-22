@@ -9,3 +9,4 @@ Track MPG and other stats for Danny's cars.
 | 3       | Data migrated to MongoDB |
 | 4       | Data caching using Redis |
 | 5       | Security - password hashed and verified using Argon2 |
+| 6       | Currency and unit conversion for Canada |
