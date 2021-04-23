@@ -133,7 +133,7 @@ function refresh() {
             $('<tr>')
                 .append($('<td>', { 'text': shortDateTime }))
                 .append($('<td>', { 'text': cur.miles }))
-                .append($('<td>', { 'text': cur.gallons }))
+                .append($('<td>', { 'text': cur.gallons.toFixed(2) }))
                 .append($('<td>', { 'text': cur.mpg.toFixed(2) }))
                 .append($('<td>', { 'text': '$' + cur.pricePerGallon.toFixed(2) }))
                 .append($('<td>', { 'text': '$' + cur.munny.toFixed(2) }))
