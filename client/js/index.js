@@ -7,7 +7,6 @@ var Status = Object.freeze({
     'Error': 3
 });
 var submitStart = null;
-var canada = false;
 
 function reportStatus(status, msg) {
     $('#errorFooter').hide();
@@ -171,9 +170,29 @@ function hideFormButtonClick() {
 }
 
 function canadaButtonClick() {
-    $('#gallons').attr('placeholder', 'Liters');
-    $('#pricePerGallon').attr('placeholder', 'CAD per liter');
-    canada = true;
+    reportStatus(Status.Processing, null);
+    $.ajax({
+        type: 'GET',
+        contentType: 'application/json',
+        dataType: 'json',
+        url: '/getCADRate',
+        data: JSON.stringify({}),
+        success: canadaSuccessHandler,
+        error: errorHandler
+    });
+}
+
+function canadaSuccessHandler(jsonData) {
+    const cadPerUsd = jsonData['cadPerUsd'];
+    const gallonsPerLiter = 0.264172;
+
+    const liters = $('#gallons').val();
+    $('#gallons').val(liters * gallonsPerLiter);
+
+    const cadPerLiter = $('#pricePerGallon').val() / 100.0;
+    $('#pricePerGallon').val(cadPerLiter / (cadPerUsd * gallonsPerLiter));
+
+    reportStatus(Status.Success, 'Retrieved ' + cadPerUsd + ' CAD/USD');
 }
 
 async function submitButtonClick() {
@@ -211,8 +230,7 @@ async function submitButtonClick() {
         'miles': miles,
         'gallons': gallons,
         'pricePerGallon': pricePerGallon,
-        'comments': $('#comments').val(),
-        'country': canada ? 'CA' : 'US'
+        'comments': $('#comments').val()
     };
 
     $.ajax({

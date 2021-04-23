@@ -72,6 +72,18 @@ app.get('/getVersion', async (req, res) => {
     }
 });
 
+app.get('/getCADRate', async (req, res) => {
+    try {
+        const openExchangeReq = await axios.get(openExchangeRatesUrl);
+        res.send({
+            cadPerUsd: openExchangeReq.data.rates.CAD
+        });
+    } catch (err) {
+        console.error(err);
+        res.status(500).send('Error retrieving currency exchange rates.');
+    }
+});
+
 async function retrieveData(res) {
     let startTime = moment();
 
@@ -185,23 +197,6 @@ app.post('/submit', async (req, res) => {
     let transaction = JSON.parse(JSON.stringify(req.body));
     delete transaction.passwordHash;
     delete transaction.car;
-
-    // Convert Canadian units (CAD, liters) to US, if necessary.
-    if (transaction.country === 'CA') {
-        const gallonsPerLiter = 0.264172;
-        try {
-            const res = await axios.get(openExchangeRatesUrl);
-            const cadPerUsd = res.data.rates.CAD;
-            console.log(util.format('exchange rate retrieved: %s CAD per 1 USD', cadPerUsd));
-
-            transaction['gallons'] = transaction['gallons'] * gallonsPerLiter;
-            transaction['pricePerGallon'] = transaction['pricePerGallon'] / (cadPerUsd * gallonsPerLiter);
-        } catch (err) {
-            res.status(500).send('Error retrieving currency exchange rates.');
-            console.error(err);
-            return;
-        }
-    }
 
     // Set the date field to now.
     transaction['date'] = new Date();
