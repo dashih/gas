@@ -170,6 +170,12 @@ function hideFormButtonClick() {
 }
 
 function canadaButtonClick() {
+    if ($('#gallons').val() === '' || $('#pricePerGallon').val() === '') {
+        $('#gallons').attr('placeholder', 'Liters');
+        $('#pricePerGallon').attr('placeholder', $('<div>').html('CA&#162; (cents) per liter').text());
+        return;
+    }
+
     reportStatus(Status.Processing, null);
     $.ajax({
         type: 'GET',
