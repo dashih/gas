@@ -4,17 +4,17 @@
   <head>
 
     <meta charset="utf-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
-    <meta name="description" content="">
-    <meta name="author" content="">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="description" content="Danny's Gas App">
+    <meta name="author" content="dashih">
 
     <title>Danny's Gas App</title>
 
     <!-- Bootstrap core CSS -->
-    <link href="vendor/bootstrap/css/bootstrap.min.css" rel="stylesheet">
+    <link href="vendor/bootstrap-5.0.2-dist/css/bootstrap.min.css" rel="stylesheet">
 
-    <!-- Custom styles for this template -->
-    <link href="css/full.css" rel="stylesheet">
+    <!-- My styles -->
+    <link href="css/index.css" rel="stylesheet">
 
     <!-- Favicon -->
     <link rel="icon" href="img/gas.png">
@@ -26,18 +26,18 @@
 
     <div class="container text-white text-center">
       <!-- Title -->
-      <div class="row mt-3 no-gutters">
-        <div class="col-12 mx-auto">
+      <div class="row mt-3 g-0">
+        <div class="col-md-auto mx-auto">
           <h1>Danny's Gas App</h1>
-          <hr />
+          <hr class="my-3" />
           <div id="version" class="versions">hello</div>
-          <hr />
+          <hr class="my-3" />
         </div>
       </div>
 
       <!-- Car dropdown -->
-      <div class="row no-gutters mb-2">
-        <div class="col-6 mx-auto">
+      <div class="row g-0 mb-2">
+        <div class="col-md-auto mx-auto">
           <select id="carSelector" class="custom-select text-center">
             <option selected value="2018-Ford-Mustang-GT350" class="text-center">2018 Ford Mustang GT350</option>
             <option value="1997-BMW-M3">1997 BMW M3</option>
@@ -50,16 +50,16 @@
       </div>
 
       <!-- Button to show the form -->
-      <div id="showFormDiv" class="row no-gutters">
-        <div class="col-4 mx-auto">
+      <div id="showFormDiv" class="row g-0">
+        <div class="col-md-auto mx-auto">
           <button id="showFormButton" type="button" class="btn btn-info btn-block">Show Form</button>
         </div>
       </div>
 
       <!-- Form for logging new transactions -->
       <div id="formDiv">
-        <div class="row no-gutters">
-          <div class="col-4 mx-auto">
+        <div class="row g-0 my-3">
+          <div class="col-md-auto mx-auto">
             <div class="form-group">
               <input id="password" type="password" placeholder="Password" class="form-control text-center mb-2" />
               <input id="miles" placeholder="Miles" class="form-control text-center mb-2" type="text" />
@@ -69,7 +69,7 @@
             </div>
           </div>
         </div>
-        <div class="row no-gutters">
+        <div class="row g-0">
           <div class="col-12 mx-auto">
             <button id="hideFormButton" type="button" class="btn btn-secondary">Hide</button>
             <button id="canadaButton" type="button" class="btn btn-secondary">Canada</button>
@@ -78,14 +78,14 @@
         </div>
       </div>
 
-      <hr />
+      <hr class="my-3" />
 
       <!-- Summary -->
-      <div id="summaryDiv" class="row no-gutters">
-        <div class="col-10 mx-auto">
+      <div id="summaryDiv" class="row g-0">
+        <div class="col-lg-6 mx-auto">
           <h4 id="currentCar"></h4>
           <div id="currentCarDateRange" class="small">dunno</div>
-          <hr />
+          <hr class="my-3" />
           <table class="table text-left text-light">
             <tbody>
               <tr><td><strong># of fillups</strong></td><td id="numFillups"></td></tr>
@@ -107,8 +107,8 @@
       <br />
 
       <!-- All transactions in a table -->
-      <div id="transactionsDiv" class="row no-gutters">
-        <div class="col-12 mx-auto">
+      <div id="transactionsDiv" class="row g-0">
+        <div class="col-lg-12 mx-auto">
           <div class="table-responsive">
             <table id="transactionsTable" class="table text-light">
               <thead>
@@ -132,14 +132,14 @@
     <!-- Footers -->
     <footer id="successFooter" class="statusSuccess">
       <div class="container">
-        <div class="row no-gutters">
+        <div class="row g-0">
           <div id="successMsg" class="col-12 mx-auto text-center text-light"></div>
         </div>
       </div>
     </footer>
     <footer id="processingFooter" class="statusProcessing">
       <div class="container">
-        <div class="row no-gutters">
+        <div class="row g-0">
           <div class="col-4 mx-auto">
             <div class="progress">
               <div class="progress-bar bg-info progress-bar-striped progress-bar-animated" style="width:100%;"></div>
@@ -150,7 +150,7 @@
     </footer>
     <footer id="errorFooter" class="statusError">
       <div class="container">
-        <div class="row no-gutters">
+        <div class="row g-0">
           <div id="errorMsg" class="col-12 mx-auto text-center text-light font-weight-bold"></div>
         </div>
       </div>
@@ -158,7 +158,7 @@
 
     <!-- Bootstrap core JavaScript -->
     <script src="vendor/jquery/jquery-3.6.0.min.js"></script>
-    <script src="vendor/bootstrap/js/bootstrap.bundle.min.js"></script>
+    <script src="vendor/bootstrap-5.0.2-dist/js/bootstrap.bundle.min.js"></script>
 
     <!-- App javascript -->
     <script src="js/index.js"></script>

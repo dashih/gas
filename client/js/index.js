@@ -73,7 +73,7 @@ function requestVersion() {
             'Express ' + data.expressVersion +
             '<br />' +
             'jQuery ' + jQuery().jquery + ' | ' +
-            'Bootstrap 4.5.2')
+            'Bootstrap 5.0.2')
     });
 }
 
