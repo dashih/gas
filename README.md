@@ -10,3 +10,4 @@ Track MPG and other stats for Danny's cars.
 | 4       | Data caching using Redis |
 | 5       | Security - password hashed and verified using Argon2 |
 | 6       | Currency and unit conversion for Canada |
+| 7       | Ports UI to Bootstrap 5 and removes all templating |
