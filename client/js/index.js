@@ -65,7 +65,7 @@ function requestVersion() {
         $('#version').html(
             'v' + data.appVersion +
             '<br />' +
-            'CentOS ' + data.osVersion + ' | ' +
+            data.osVersion + ' | ' +
             'Node.js ' + data.nodeVersion +
             '<br />' +
             'MongoDB ' + data.mongoVersion +
