@@ -47,7 +47,8 @@ async function getMongoClient() {
 app.get('/getVersion', async (req, res) => {
     let packageJson = JSON.parse(await fsAsync.readFile('package.json', 'utf8'));
     let appVersion = packageJson['version'];
-    let osVersion = 'Ubuntu 20.04.2 LTS';
+    let osInfo = await fsAsync.readFile('/etc/lsb-release', 'utf8');
+    let osVersion = osInfo.match(/DISTRIB_DESCRIPTION=\"(?<vers>.+)\"/).groups['vers'];
     let client = await getMongoClient();
     if (client == null) {
         res.status(500).send("Error connecting to MongoDB. See logs.");

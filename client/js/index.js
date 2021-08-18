@@ -68,8 +68,7 @@ function requestVersion() {
             data.osVersion + ' | ' +
             'Node.js ' + data.nodeVersion +
             '<br />' +
-            'MongoDB ' + data.mongoVersion +
-            '<br />' +
+            'MongoDB ' + data.mongoVersion + ' | ' +
             'Express ' + data.expressVersion +
             '<br />' +
             'jQuery ' + jQuery().jquery + ' | ' +
