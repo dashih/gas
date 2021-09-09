@@ -11,3 +11,4 @@ Track MPG and other stats for Danny's cars.
 | 5       | Security - password hashed and verified using Argon2 |
 | 6       | Currency and unit conversion for Canada |
 | 7       | Ports UI to Bootstrap 5 and removes all templating |
+| 8       | Maintenance mode |
