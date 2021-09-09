@@ -30,10 +30,22 @@ const openExchangeRatesUrl = Object.freeze(
         'https://openexchangerates.org/api/latest.json?app_id=%s',
         config['openExchangeRatesAppId']));
 
+// Maintenance mode
+const maintenanceModeFile = 'maintenance.lock';
+
 // Setup express
 const app = express();
 app.use(express.static('client'));
 app.use(bodyParser.json());
+
+function checkMaintenanceMode(res) {
+    if (fs.existsSync(maintenanceModeFile)) {
+        res.status(503).send('Routine maintenance. Please try again later!');
+        return true;
+    }
+
+    return false;
+}
 
 async function getMongoClient() {
     return await MongoClient.connect(
@@ -179,10 +191,18 @@ async function retrieveData(res) {
 }
 
 app.post('/request', async (req, res) => {
+    if (checkMaintenanceMode(res)) {
+        return;
+    }
+
     await retrieveData(res);
 });
 
 app.post('/submit', async (req, res) => {
+    if (checkMaintenanceMode(res)) {
+        return;
+    }
+
     // Check the password.
     let passwordHash = req.body.passwordHash.normalize("NFC");
     if (!await argon2.verify(passwordHash, submitPassword)) {
