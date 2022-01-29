@@ -221,6 +221,7 @@ app.post('/submit', async (req, res) => {
     // Delete the car field, because we use a MongoDB collection for each car.
     let transaction = JSON.parse(JSON.stringify(req.body));
     delete transaction.passwordHash;
+    delete transaction.nonce;
     delete transaction.car;
 
     // Set the date field to now.
