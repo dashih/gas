@@ -211,7 +211,7 @@ app.post('/submit', async (req, res) => {
     let passwordPlusNonce = util.format('%s.%s', submitPassword, nonce);
     let passwordHash = req.body.passwordHash.normalize("NFC");
     if (!await argon2.verify(passwordHash, passwordPlusNonce)) {
-        res.status(500).send("Wrong password");
+        res.status(401).send("Wrong password");
         return;
     }
 
@@ -246,7 +246,11 @@ app.post('/submit', async (req, res) => {
         // Trigger another full retrieve.
         await retrieveData(res);
     } catch (err) {
-        res.status(500).send(err);
+        if (err === 'Nonce exists!') {
+            res.status(401).send(err);
+        } else {
+            res.status(500).send(err);
+        }
     } finally {
         client.close();
     }
