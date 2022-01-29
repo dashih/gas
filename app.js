@@ -33,6 +33,8 @@ const openExchangeRatesUrl = Object.freeze(
 // Maintenance mode
 const maintenanceModeFile = 'maintenance.lock';
 
+const nonceCollection = 'nonces';
+
 // Setup express
 const app = express();
 app.use(express.static('client'));
@@ -109,6 +111,7 @@ async function retrieveData(res) {
         let data = {};
         let gasDb = client.db(db);
         let collections = await gasDb.listCollections().toArray();
+        collections = collections.filter(collection => collection !== 'nonces');
         for (let collection of collections) {
             let car = collection['name'];
             data[car] = {};
@@ -204,8 +207,10 @@ app.post('/submit', async (req, res) => {
     }
 
     // Check the password.
+    let nonce = req.body.nonce;
+    let passwordPlusNonce = util.format('%s.%s', submitPassword, nonce);
     let passwordHash = req.body.passwordHash.normalize("NFC");
-    if (!await argon2.verify(passwordHash, submitPassword)) {
+    if (!await argon2.verify(passwordHash, passwordPlusNonce)) {
         res.status(500).send("Wrong password");
         return;
     }
@@ -229,6 +234,13 @@ app.post('/submit', async (req, res) => {
     }
 
     try {
+        // Check the nonce.
+        let nonceRecord = await client.db(db).collection(nonceCollection).findOne({ nonce: nonce });
+        if (nonceRecord !== null) {
+            throw 'Nonce exists!';
+        }
+        
+        await client.db(db).collection(nonceCollection).insertOne({ nonce: nonce });
         await client.db(db).collection(req.body.car).insertOne(transaction);
 
         // Trigger another full retrieve.

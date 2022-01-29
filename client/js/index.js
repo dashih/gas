@@ -8,6 +8,20 @@ var Status = Object.freeze({
 });
 var submitStart = null;
 
+// TODO: replace with self.crypto.randomUUID() once iOS browsers support it.
+function generateNonce() {
+    const possibleCharacters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
+    let randomArray = new Uint8Array(32);
+    self.crypto.getRandomValues(randomArray);
+    let res = '';
+    for (let i = 0; i < randomArray.length; i++) {
+        let idx = randomArray[i] % possibleCharacters.length;
+        res += possibleCharacters.charAt(idx);
+    }
+
+    return res;
+}
+
 function reportStatus(status, msg) {
     $('#errorFooter').hide();
     $('#successFooter').hide();
@@ -215,8 +229,12 @@ async function submitButtonClick() {
     showForm(false);
     reportStatus(Status.Processing, null);
 
+    // Generate nonce and append to password.
+    let nonce = generateNonce();
+    let passwordPlusNonce = password + '.' + nonce;
+
     // Hash the password using argon2. Parameters require ~10s on iPhone X.
-    let passwordNormalized = password.normalize("NFC");
+    let passwordNormalized = passwordPlusNonce.normalize("NFC");
     let salt = new Uint32Array(16);
     window.crypto.getRandomValues(salt);
     let passwordHash = await argon2.hash({
@@ -231,6 +249,7 @@ async function submitButtonClick() {
 
     let payload = {
         'passwordHash': passwordHash.encoded,
+        'nonce': nonce,
         'car': car,
         'miles': miles,
         'gallons': gallons,
