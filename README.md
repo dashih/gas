@@ -12,3 +12,4 @@ Track MPG and other stats for Danny's cars.
 | 6       | Currency and unit conversion for Canada |
 | 7       | Ports UI to Bootstrap 5 and removes all templating |
 | 8       | Maintenance mode |
+| 9       | Security - nonces |
