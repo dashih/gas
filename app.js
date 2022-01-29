@@ -31,9 +31,9 @@ const openExchangeRatesUrl = Object.freeze(
         config['openExchangeRatesAppId']));
 
 // Maintenance mode
-const maintenanceModeFile = 'maintenance.lock';
+const maintenanceModeFile = Object.freeze('maintenance.lock');
 
-const nonceCollection = 'nonces';
+const nonceCollection = Object.freeze('nonces');
 
 // Setup express
 const app = express();
