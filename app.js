@@ -98,6 +98,58 @@ app.get('/api/getCADRate', async (req, res) => {
     }
 });
 
+/*
+ * Aggregate data is calculated for both the current car and lifetime.
+ */
+async function populateAggregateData(client, data, carCondition) {
+    await client.db(db).collection(dbCollection).aggregate([
+        {
+            $match: carCondition
+        },
+        {
+            $group: {
+                _id: null,
+                numTransactions: { $sum: 1 },
+                avgMpg: { $avg: { $divide: ['$miles', '$gallons'] } },
+                stdDevMpg: { $stdDevSamp: { $divide: ['$miles', '$gallons'] } },
+                minMpg: { $min: { $divide: ['$miles', '$gallons'] } },
+                maxMpg: { $max: { $divide: ['$miles', '$gallons'] } },
+                totalMunny: { $sum: { $multiply: ['$gallons', '$pricePerGallon'] } },
+                avgMunny: { $avg: { $multiply: ['$gallons', '$pricePerGallon'] } },
+                stdDevMunny: { $stdDevSamp: { $multiply: ['$gallons', '$pricePerGallon'] } },
+                totalGallons: { $sum: '$gallons' },
+                avgGallons: { $avg: '$gallons' },
+                stdDevGallons: { $stdDevSamp: '$gallons' },
+                totalMiles: { $sum: '$miles' },
+                avgMiles: { $avg: '$miles' },
+                stdDevMiles: { $stdDevSamp: '$miles' },
+                avgPricePerGallon: { $avg: '$pricePerGallon' },
+                stdDevPricePerGallon: { $stdDevSamp: '$pricePerGallon' }
+            }
+        }
+    ]).forEach(doc => {
+        for (let k in doc) {
+            if (k !== '_id') {
+                data[k] = doc[k];
+            }
+        }
+    });
+
+    // Calculate date information.
+    // Dividing the difference between the last and first dates and the
+    // number of transactions gives the average time between fills.
+    const numTransactions = (await client.db(db).collection(dbCollection).find(carCondition).toArray()).length;
+    const firstDate = moment((await client.db(db).collection(dbCollection).find(carCondition).sort({ date: +1 }).limit(1).toArray())[0].date);
+    const lastDate = moment((await client.db(db).collection(dbCollection).find(carCondition).sort({ date: -1 }).limit(1).toArray())[0].date);
+    const firstLastDiff = lastDate.diff(firstDate);
+    data['avgTimeBetween'] = moment.duration(firstLastDiff / numTransactions).asDays();
+    data['dateRange'] = util.format(
+        "%s years (%s to %s)",
+        moment.duration(firstLastDiff).asYears().toFixed(1),
+        firstDate.format("MMM YYYY"),
+        lastDate.format("MMM YYYY"));
+}
+
 app.post('/api/getCarData', async (req, res) => {
     if (checkMaintenanceMode(res)) {
         return;
@@ -114,78 +166,26 @@ app.post('/api/getCarData', async (req, res) => {
 
     try {
         const data = {};
-        const gasDb = client.db(db);
         data['transactions'] = new Array();
 
-        // Record the first and last fillup date to calculate average time between fills.
-        let firstDate = null;
-        let lastDate = null;
-
         // Populate raw transaction data and calculate basic aggregate fields.
-        await gasDb.collection(dbCollection).find({car: car}).sort({ date: -1 }).forEach(doc => {
+        await client.db(db).collection(dbCollection).find({car: car}).sort({ date: -1 }).forEach(doc => {
             // mpg and munny are generated (not stored in db)
             doc['mpg'] = doc['miles'] / doc['gallons'];
             doc['munny'] = doc['gallons'] * doc['pricePerGallon'];
 
-            // The data is sorted most recent to least.
-            if (lastDate === null) {
-                lastDate = moment(doc['date']);
-            }
-            firstDate = moment(doc['date']);
-
             data['transactions'].push(doc);
         });
 
-        // Populate complex aggregate fields using MongoDB.
-        await gasDb.collection(dbCollection).aggregate([
-            {
-                $match: { car: car }
-            },
-            {
-                $group: {
-                    _id: null,
-                    numTransactions: { $sum: 1 },
-                    avgMpg: { $avg: { $divide: ['$miles', '$gallons'] } },
-                    stdDevMpg: { $stdDevSamp: { $divide: ['$miles', '$gallons'] } },
-                    minMpg: { $min: { $divide: ['$miles', '$gallons'] } },
-                    maxMpg: { $max: { $divide: ['$miles', '$gallons'] } },
-                    totalMunny: { $sum: { $multiply: ['$gallons', '$pricePerGallon'] } },
-                    avgMunny: { $avg: { $multiply: ['$gallons', '$pricePerGallon'] } },
-                    stdDevMunny: { $stdDevSamp: { $multiply: ['$gallons', '$pricePerGallon'] } },
-                    totalGallons: { $sum: '$gallons' },
-                    avgGallons: { $avg: '$gallons' },
-                    stdDevGallons: { $stdDevSamp: '$gallons' },
-                    totalMiles: { $sum: '$miles' },
-                    avgMiles: { $avg: '$miles' },
-                    stdDevMiles: { $stdDevSamp: '$miles' },
-                    avgPricePerGallon: { $avg: '$pricePerGallon' },
-                    stdDevPricePerGallon: { $stdDevSamp: '$pricePerGallon' }
-                }
-            }
-        ]).forEach(doc => {
-            for (let k in doc) {
-                if (k !== '_id') {
-                    data[k] = doc[k];
-                }
-            }
+        await populateAggregateData(client, data, {car: car});
 
-            const firstLastDiff = lastDate.diff(firstDate);
-
-            // Dividing the difference between the last and first dates and the
-            // number of transactions gives the average time between fills.
-            data['avgTimeBetween'] = moment.duration(firstLastDiff / doc['numTransactions']).asDays();
-
-            // Populate date range string.
-            data['dateRange'] = util.format(
-                "%s years (%s to %s)",
-                moment.duration(firstLastDiff).asYears().toFixed(1),
-                firstDate.format("MMM YYYY"),
-                lastDate.format("MMM YYYY"));
-        });
+        const lifetimeData = {};
+        await populateAggregateData(client, lifetimeData, {});
 
         res.send({
-            "carData": data,
-            "duration": moment().diff(startTime, "milliseconds")
+            carData: data,
+            lifetimeData: lifetimeData,
+            duration: moment().diff(startTime, 'milliseconds')
         });
     } catch (err) {
         console.error(err);

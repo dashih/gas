@@ -100,7 +100,7 @@ async function updateCarData() {
                 `;
         }
 
-        // Populate summary table.
+        // Populate summary table for the current car.
         document.getElementById('numFillups').innerText = carData.numTransactions;
         document.getElementById('mpg').innerText = `${carData.avgMpg.toFixed(2)} \xB1 ${carData.stdDevMpg.toFixed(2)}`;
         document.getElementById('mpgMaxMin').innerText = `${carData.minMpg.toFixed(2)} - ${carData.maxMpg.toFixed(2)}`;
@@ -112,6 +112,20 @@ async function updateCarData() {
         document.getElementById('milesPerFillup').innerText = `${carData.avgMiles.toFixed(2)} \xB1 ${carData.stdDevMiles.toFixed(2)}`;
         document.getElementById('gallonsPerFillup').innerText = `${carData.avgGallons.toFixed(2)} \xB1 ${carData.stdDevGallons.toFixed(2)}`;
         document.getElementById('gasPrice').innerText = `$${carData.avgPricePerGallon.toFixed(2)} \xB1 $${carData.stdDevPricePerGallon.toFixed(2)}`;
+
+        // Populate summary table for lifetime data.
+        const lifetimeData = responseData['lifetimeData'];
+        document.getElementById('numFillupsLifetime').innerText = lifetimeData.numTransactions;
+        document.getElementById('mpgLifetime').innerText = `${lifetimeData.avgMpg.toFixed(2)} \xB1 ${lifetimeData.stdDevMpg.toFixed(2)}`;
+        document.getElementById('mpgMaxMinLifetime').innerText = `${lifetimeData.minMpg.toFixed(2)} - ${lifetimeData.maxMpg.toFixed(2)}`;
+        document.getElementById('totalMilesLifetime').innerText = parseFloat(lifetimeData.totalMiles.toFixed(2)).toLocaleString();
+        document.getElementById('totalGallonsLifetime').innerText = parseFloat(lifetimeData.totalGallons.toFixed(2)).toLocaleString();
+        document.getElementById('totalMunnyLifetime').innerText = `$${parseFloat(lifetimeData.totalMunny.toFixed(2)).toLocaleString()}`
+        document.getElementById('timeBetweenLifetime').innerText = `${lifetimeData.avgTimeBetween.toFixed(2)} days`;
+        document.getElementById('munnyPerFillupLifetime').innerText = `$${lifetimeData.avgMunny.toFixed(2)} \xB1 $${lifetimeData.stdDevMunny.toFixed(2)}`;
+        document.getElementById('milesPerFillupLifetime').innerText = `${lifetimeData.avgMiles.toFixed(2)} \xB1 ${lifetimeData.stdDevMiles.toFixed(2)}`;
+        document.getElementById('gallonsPerFillupLifetime').innerText = `${lifetimeData.avgGallons.toFixed(2)} \xB1 ${lifetimeData.stdDevGallons.toFixed(2)}`;
+        document.getElementById('gasPriceLifetime').innerText = `$${lifetimeData.avgPricePerGallon.toFixed(2)} \xB1 $${lifetimeData.stdDevPricePerGallon.toFixed(2)}`;
 
         showCarData(true);
 
