@@ -59,18 +59,18 @@ async function getMongoClient() {
 }
 
 app.get('/api/getVersion', async (req, res) => {
-    let packageJson = JSON.parse(await fsAsync.readFile('package.json', 'utf8'));
-    let appVersion = packageJson['version'];
-    let osInfo = await fsAsync.readFile('/etc/lsb-release', 'utf8');
-    let osVersion = osInfo.match(/DISTRIB_DESCRIPTION=\"(?<vers>.+)\"/).groups['vers'];
-    let client = await getMongoClient();
+    const packageJson = JSON.parse(await fsAsync.readFile('package.json', 'utf8'));
+    const appVersion = packageJson['version'];
+    const osInfo = await fsAsync.readFile('/etc/lsb-release', 'utf8');
+    const osVersion = osInfo.match(/DISTRIB_DESCRIPTION=\"(?<vers>.+)\"/).groups['vers'];
+    const client = await getMongoClient();
     if (client == null) {
         res.status(500).send("Error connecting to MongoDB. See logs.");
         return;
     }
 
     try {
-        let mongoInfo = await client.db(db).admin().serverInfo();
+        const mongoInfo = await client.db(db).admin().serverInfo();
         res.send({
             osVersion: osVersion,
             appVersion: appVersion,
@@ -104,17 +104,17 @@ app.post('/api/getCarData', async (req, res) => {
     }
 
     const car = req.body.car;
-    let startTime = moment();
+    const startTime = moment();
 
-    let client = await getMongoClient();
+    const client = await getMongoClient();
     if (client == null) {
         res.status(500).send("Error connecting to MongoDB. See logs.");
         return;
     }
 
     try {
-        let data = {};
-        let gasDb = client.db(db);
+        const data = {};
+        const gasDb = client.db(db);
         data['transactions'] = new Array();
 
         // Record the first and last fillup date to calculate average time between fills.
@@ -166,7 +166,7 @@ app.post('/api/getCarData', async (req, res) => {
                 }
             }
 
-            let firstLastDiff = lastDate.diff(firstDate);
+            const firstLastDiff = lastDate.diff(firstDate);
 
             // Dividing the difference between the last and first dates and the
             // number of transactions gives the average time between fills.
@@ -180,10 +180,9 @@ app.post('/api/getCarData', async (req, res) => {
                 lastDate.format("MMM YYYY"));
         });
 
-        let duration = moment().diff(startTime, "milliseconds");
         res.send({
             "carData": data,
-            "duration": duration
+            "duration": moment().diff(startTime, "milliseconds")
         });
     } catch (err) {
         console.error(err);
@@ -210,11 +209,11 @@ app.post('/api/submit', async (req, res) => {
         return;
     }
 
-    let car = req.body.car;
+    const car = req.body.car;
 
     // Delete the passwordHash field.
     // Delete the car field, because we use a MongoDB collection for each car.
-    let transaction = JSON.parse(JSON.stringify(req.body));
+    const transaction = JSON.parse(JSON.stringify(req.body));
     delete transaction.passwordHash;
     delete transaction.nonce;
     delete transaction.car;
@@ -223,7 +222,7 @@ app.post('/api/submit', async (req, res) => {
     transaction['date'] = new Date();
 
     // Write to db.
-    let client = await getMongoClient();
+    const client = await getMongoClient();
     if (client == null) {
         res.status(500).send("Error connecting to MongoDB. See logs.");
         return;
@@ -231,7 +230,7 @@ app.post('/api/submit', async (req, res) => {
 
     try {
         // Check the nonce.
-        let nonceRecord = await client.db(db).collection(nonceCollection).findOne({ nonce: nonce });
+        const nonceRecord = await client.db(db).collection(nonceCollection).findOne({ nonce: nonce });
         if (nonceRecord !== null) {
             throw 'Nonce exists!';
         }

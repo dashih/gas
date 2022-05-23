@@ -1,4 +1,4 @@
-var Status = Object.freeze({
+const Status = Object.freeze({
     'None': 0,
     'Success': 1,
     'Processing': 2,
@@ -8,11 +8,11 @@ var Status = Object.freeze({
 // TODO: replace with self.crypto.randomUUID() once iOS browsers support it.
 function generateNonce() {
     const possibleCharacters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
-    let randomArray = new Uint8Array(32);
+    const randomArray = new Uint8Array(32);
     self.crypto.getRandomValues(randomArray);
     let res = '';
     for (let i = 0; i < randomArray.length; i++) {
-        let idx = randomArray[i] % possibleCharacters.length;
+        const idx = randomArray[i] % possibleCharacters.length;
         res += possibleCharacters.charAt(idx);
     }
 
