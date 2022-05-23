@@ -5,20 +5,6 @@ const Status = Object.freeze({
     'Error': 3
 });
 
-// TODO: replace with self.crypto.randomUUID() once iOS browsers support it.
-function generateNonce() {
-    const possibleCharacters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
-    const randomArray = new Uint8Array(32);
-    self.crypto.getRandomValues(randomArray);
-    let res = '';
-    for (let i = 0; i < randomArray.length; i++) {
-        const idx = randomArray[i] % possibleCharacters.length;
-        res += possibleCharacters.charAt(idx);
-    }
-
-    return res;
-}
-
 async function sha256(password) {
     const passwordEncoded = new TextEncoder().encode(password);
     const hashBuffer =  await crypto.subtle.digest('SHA-256', passwordEncoded);
@@ -190,7 +176,7 @@ document.getElementById('submitButton').onclick = async () => {
     reportStatus(Status.Processing, null);
 
     // Generate nonce and append to password.
-    const nonce = generateNonce();
+    const nonce = self.crypto.randomUUID();
     const passwordPlusNonce = password + '.' + nonce;
     const passwordHash = await sha256(passwordPlusNonce);
     const payload = {
