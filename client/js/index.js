@@ -196,10 +196,10 @@ document.getElementById('submitButton').onclick = async () => {
     });
     if (response.ok) {
         const responseData = await response.json();
-        reportStatus(Status.Success, `Successfully posted transaction in ${responseData.duration} ms! Reloading in 3 seconds.`);
+        reportStatus(Status.Success, `Posted in ${responseData.duration} ms! Reloading in 2s`);
         setTimeout(() => {
             updateCarData();
-        }, 3000);
+        }, 2000);
     } else {
         reportStatus(Status.Error, `Error submitting ${response.status} - ${response.statusText} - ${await response.text()}`);
     }
