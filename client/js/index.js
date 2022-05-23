@@ -75,10 +75,17 @@ async function updateCarData() {
     if (response.ok) {
         const responseData = await response.json();
         const carData = responseData.carData;
+        const lifetimeData = responseData['lifetimeData'];
         showCarData(false);
+        if (carData.transactions.length === 0) {
+            reportStatus(Status.Success, 'Nothing yet for this car');
+            return;
+        }
 
-        // Show car date range.
-        document.getElementById('currentCarDateRange').innerText = carData['dateRange'];
+        // Populate car date range.
+        document.getElementById('currentCarDateRange').innerText = 
+            `${carData['dateRange']}
+            ${lifetimeData['dateRange']} (lifetime)`;
 
         // Clear transactions table.
         const transactionsTableBody = document.getElementById('transactionsTable').getElementsByTagName('tbody')[0];
@@ -114,7 +121,6 @@ async function updateCarData() {
         document.getElementById('gasPrice').innerText = `$${carData.avgPricePerGallon.toFixed(2)} \xB1 $${carData.stdDevPricePerGallon.toFixed(2)}`;
 
         // Populate summary table for lifetime data.
-        const lifetimeData = responseData['lifetimeData'];
         document.getElementById('numFillupsLifetime').innerText = lifetimeData.numTransactions;
         document.getElementById('mpgLifetime').innerText = `${lifetimeData.avgMpg.toFixed(2)} \xB1 ${lifetimeData.stdDevMpg.toFixed(2)}`;
         document.getElementById('mpgMaxMinLifetime').innerText = `${lifetimeData.minMpg.toFixed(2)} - ${lifetimeData.maxMpg.toFixed(2)}`;

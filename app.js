@@ -37,8 +37,10 @@ const dbCollection = Object.freeze('transactions');
 
 // Setup express
 const app = express();
-app.use(express.static('client'));
 app.use(bodyParser.json());
+
+// Serve the client application (index.html/js/css).
+app.use(express.static('client'));
 
 function checkMaintenanceMode(res) {
     if (fs.existsSync(maintenanceModeFile)) {
@@ -135,19 +137,19 @@ async function populateAggregateData(client, data, carCondition) {
         }
     });
 
-    // Calculate date information.
-    // Dividing the difference between the last and first dates and the
+    // Dividing the difference between the last and first dates, and the 
     // number of transactions gives the average time between fills.
-    const numTransactions = (await client.db(db).collection(dbCollection).find(carCondition).toArray()).length;
-    const firstDate = moment((await client.db(db).collection(dbCollection).find(carCondition).sort({ date: +1 }).limit(1).toArray())[0].date);
-    const lastDate = moment((await client.db(db).collection(dbCollection).find(carCondition).sort({ date: -1 }).limit(1).toArray())[0].date);
+    const firstDate = moment((await client.db(db).collection(dbCollection)
+        .find(carCondition).sort({ date: +1 }).limit(1).toArray())[0].date);
+    const lastDate = moment((await client.db(db).collection(dbCollection)
+        .find(carCondition).sort({ date: -1 }).limit(1).toArray())[0].date);
     const firstLastDiff = lastDate.diff(firstDate);
-    data['avgTimeBetween'] = moment.duration(firstLastDiff / numTransactions).asDays();
+    data['avgTimeBetween'] = moment.duration(firstLastDiff / data.numTransactions).asDays();
     data['dateRange'] = util.format(
-        "%s years (%s to %s)",
+        '%s years | %s-%s',
         moment.duration(firstLastDiff).asYears().toFixed(1),
-        firstDate.format("MMM YYYY"),
-        lastDate.format("MMM YYYY"));
+        firstDate.format('YYYY'),
+        lastDate.format('YYYY'));
 }
 
 app.post('/api/getCarData', async (req, res) => {
@@ -166,6 +168,7 @@ app.post('/api/getCarData', async (req, res) => {
 
     try {
         const data = {};
+        const lifetimeData = {};
         data['transactions'] = new Array();
 
         // Populate raw transaction data and calculate basic aggregate fields.
@@ -177,10 +180,10 @@ app.post('/api/getCarData', async (req, res) => {
             data['transactions'].push(doc);
         });
 
-        await populateAggregateData(client, data, {car: car});
-
-        const lifetimeData = {};
-        await populateAggregateData(client, lifetimeData, {});
+        if (data['transactions'].length > 0) {
+            await populateAggregateData(client, data, { car: car });
+            await populateAggregateData(client, lifetimeData, {});
+        }
 
         res.send({
             carData: data,
