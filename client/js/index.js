@@ -1,12 +1,9 @@
-var car = null;
-var cachedData = null;
 var Status = Object.freeze({
     'None': 0,
     'Success': 1,
     'Processing': 2,
     'Error': 3
 });
-var submitStart = null;
 
 // TODO: replace with self.crypto.randomUUID() once iOS browsers support it.
 function generateNonce() {
@@ -22,205 +19,168 @@ function generateNonce() {
     return res;
 }
 
+async function sha256(password) {
+    const passwordEncoded = new TextEncoder().encode(password);
+    const hashBuffer =  await crypto.subtle.digest('SHA-256', passwordEncoded);
+    const hashArray = Array.from(new Uint8Array(hashBuffer));
+    const hashHex = hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
+    return hashHex;
+}
+
 function reportStatus(status, msg) {
-    $('#errorFooter').hide();
-    $('#successFooter').hide();
-    $('#processingFooter').hide();
+    document.getElementById('errorFooter').style.display = 'none';
+    document.getElementById('successFooter').style.display = 'none';
+    document.getElementById('processingFooter').style.display = 'none';
     switch (status) {
         case Status.Success:
-            $('#successMsg').text(msg);
-            $('#successFooter').fadeIn();
+            document.getElementById('successMsg').innerText = msg;
+            document.getElementById('successFooter').style.display = 'block';
             setTimeout(() => {
-                $('#successFooter').fadeOut();
+                document.getElementById('successFooter').style.display = 'none';
             }, 2000);
             break;
         case Status.Processing:
-            $('#processingFooter').show();
+            document.getElementById('processingFooter').style.display = 'block';
             break;
         case Status.Error:
-            $('#errorMsg').text(msg);
-            $('#errorFooter').show();
+            document.getElementById('errorMsg').innerText = msg;
+            document.getElementById('errorFooter').style.display = 'block';
             break;
         default:
             break;
     }
-
-    currentStatus = status;
-}
-
-function updateCar() {
-    car = $('#carSelector').find(":selected").val();
-    $('#currentCar').text($('#carSelector').find(":selected").text());
 }
 
 function showForm(show) {
     reportStatus(Status.None, null);
     if (show) {
-        $('#showFormDiv').hide();
-        $('#formDiv').fadeIn();
+        document.getElementById('showFormDiv').style.display = 'none';
+        document.getElementById('formDiv').style.display = 'block';
     } else {
-        $('#formDiv').hide();
-        $('#showFormDiv').show();
+        document.getElementById('formDiv').style.display = 'none';
+        document.getElementById('showFormDiv').style.display = 'block';
     }
 }
 
 function showCarData(show) {
     if (show) {
-        $('#summaryDiv').fadeIn();
-        $('#transactionsDiv').fadeIn();
+        document.getElementById('summaryDiv').style.display = 'block';
+        document.getElementById('transactionsDiv').style.display = 'block';
     } else {
-        $('#summaryDiv').hide();
-        $('#transactionsDiv').hide();
+        document.getElementById('summaryDiv').style.display = 'none';
+        document.getElementById('transactionsDiv').style.display = 'none';
     }
 }
 
-function requestVersion() {
-    $.get('/getVersion', (data, status) => {
-        $('#version').html(
-            'v' + data.appVersion +
-            '<br />' +
-            data.osVersion + ' | ' +
-            'Node.js ' + data.nodeVersion +
-            '<br />' +
-            'MongoDB ' + data.mongoVersion + ' | ' +
-            'Express ' + data.expressVersion +
-            '<br />' +
-            'jQuery ' + jQuery().jquery + ' | ' +
-            'Bootstrap 5.0.2')
-    });
-}
-
-function requestCarData() {
+async function updateCarData() {
     reportStatus(Status.Processing, null);
-    $.ajax({
-        type: 'POST',
-        contentType: 'application/json',
-        dataType: 'json',
-        url: '/request',
-        data: JSON.stringify({}),
-        success: requestSuccessHandler,
-        error: errorHandler
+
+    const carSelector = document.getElementById('carSelector');
+    const currentCar = carSelector.options[carSelector.selectedIndex].value;
+    document.getElementById('currentCar').innerText = carSelector.options[carSelector.selectedIndex].text;
+    const response = await fetch('/api/getCarData', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ car: currentCar })
     });
-}
+    if (response.ok) {
+        const responseData = await response.json();
+        const carData = responseData.carData;
+        showCarData(false);
 
-function requestSuccessHandler(jsonData) {
-    cachedData = jsonData["data"];
-    let numCars = Object.keys(cachedData).length;
-    if (numCars === 0) {
-        reportStatus(Status.Success, "No transactions yet!");
-        return;
+        // Show car date range.
+        document.getElementById('currentCarDateRange').innerText = carData['dateRange'];
+
+        // Clear transactions table.
+        const transactionsTableBody = document.getElementById('transactionsTable').getElementsByTagName('tbody')[0];
+        transactionsTableBody.innerHTML = '';
+
+        // Populate the table.
+        for (let i = 0; i < carData.transactions.length; i++) {
+            const cur = carData.transactions[i];
+            const dateTime = new Date(cur.date).toLocaleString();
+            const newRow = transactionsTableBody.insertRow();
+            newRow.innerHTML = `
+                <td>${dateTime}</td>
+                <td>${cur.miles}</td>
+                <td>${cur.gallons.toFixed(2)}</td>
+                <td>${cur.mpg.toFixed(2)}</td>
+                <td>${'$' + cur.pricePerGallon.toFixed(2)}</td>
+                <td>${'$' + cur.munny.toFixed(2)}</td>
+                <td>${cur.comments}</td>
+                `;
+        }
+
+        // Populate summary table.
+        document.getElementById('numFillups').innerText = carData.numTransactions;
+        document.getElementById('mpg').innerText = `${carData.avgMpg.toFixed(2)} \xB1 ${carData.stdDevMpg.toFixed(2)}`;
+        document.getElementById('mpgMaxMin').innerText = `${carData.minMpg.toFixed(2)} - ${carData.maxMpg.toFixed(2)}`;
+        document.getElementById('totalMiles').innerText = parseFloat(carData.totalMiles.toFixed(2)).toLocaleString();
+        document.getElementById('totalGallons').innerText = parseFloat(carData.totalGallons.toFixed(2)).toLocaleString();
+        document.getElementById('totalMunny').innerText = `$${parseFloat(carData.totalMunny.toFixed(2)).toLocaleString()}`
+        document.getElementById('timeBetween').innerText = `${carData.avgTimeBetween.toFixed(2)} days`;
+        document.getElementById('munnyPerFillup').innerText = `$${carData.avgMunny.toFixed(2)} \xB1 $${carData.stdDevMunny.toFixed(2)}`;
+        document.getElementById('milesPerFillup').innerText = `${carData.avgMiles.toFixed(2)} \xB1 ${carData.stdDevMiles.toFixed(2)}`;
+        document.getElementById('gallonsPerFillup').innerText = `${carData.avgGallons.toFixed(2)} \xB1 ${carData.stdDevGallons.toFixed(2)}`;
+        document.getElementById('gasPrice').innerText = `$${carData.avgPricePerGallon.toFixed(2)} \xB1 $${carData.stdDevPricePerGallon.toFixed(2)}`;
+
+        showCarData(true);
+
+        reportStatus(
+            Status.Success,
+            `Retrieved ${responseData.carData.transactions.length} entries in ${responseData['duration']} ms`);
+    } else {
+        reportStatus(Status.Error, `Error getting car data: ${response.status} - ${response.statusText} - ${await response.text()}`);
     }
+};
 
-    let totalTransactions = 0;
-    Object.keys(cachedData).forEach(k => {
-        totalTransactions += cachedData[k].transactions.length;
-    });
+document.getElementById('carSelector').onchange = async () => {
+    await updateCarData();
+};
 
-    reportStatus(Status.Success, 'Retrieved ' + totalTransactions + ' entries for ' + numCars + ' cars (' + jsonData["duration"] + ' ms)');
-    refresh();
-}
-
-function refresh() {
-    showCarData(false);
-
-    let carData = cachedData[car];
-
-    // Show car date range.
-    $('#currentCarDateRange').text(carData['dateRange']);
-
-    // Clear the table.
-    $('#transactionsTable > tbody:last').children().remove();
-    $('#summary').children().remove();
-
-    // Populate the table.
-    for (let i = 0; i < carData.transactions.length; i++) {
-        let cur = carData.transactions[i];
-        let dateTime = new Date(cur.date);
-        let shortDateTime =
-            (dateTime.getMonth() + 1) + '/' +
-            dateTime.getDate() + '/' +
-            dateTime.getFullYear() + ' ' +
-            (dateTime.getHours() == 0 ? '00' : dateTime.getHours()) + ':' +
-            dateTime.getMinutes();
-        $('#transactionsTable tbody').append(
-            $('<tr>')
-                .append($('<td>', { 'text': shortDateTime }))
-                .append($('<td>', { 'text': cur.miles }))
-                .append($('<td>', { 'text': cur.gallons.toFixed(2) }))
-                .append($('<td>', { 'text': cur.mpg.toFixed(2) }))
-                .append($('<td>', { 'text': '$' + cur.pricePerGallon.toFixed(2) }))
-                .append($('<td>', { 'text': '$' + cur.munny.toFixed(2) }))
-                .append($('<td>', { 'text': cur.comments })));
-    }
-
-    // Summary.
-    $('#numFillups').text(carData.numTransactions);
-    $('#mpg').text(`${carData.avgMpg.toFixed(2)} \xB1 ${carData.stdDevMpg.toFixed(2)}`);
-    $('#mpgMaxMin').text(`${carData.minMpg.toFixed(2)} - ${carData.maxMpg.toFixed(2)}`);
-    $('#totalMiles').text(parseFloat(carData.totalMiles.toFixed(2)).toLocaleString('en-US'));
-    $('#totalGallons').text(parseFloat(carData.totalGallons.toFixed(2)).toLocaleString('en-US'));
-    $('#totalMunny').text(`$${parseFloat(carData.totalMunny.toFixed(2)).toLocaleString('en-US')}`);
-    $('#timeBetween').text(`${carData.avgTimeBetween.toFixed(2)} days`);
-    $('#munnyPerFillup').text(`$${carData.avgMunny.toFixed(2)} \xB1 $${carData.stdDevMunny.toFixed(2)}`);
-    $('#milesPerFillup').text(`${carData.avgMiles.toFixed(2)} \xB1 ${carData.stdDevMiles.toFixed(2)}`);
-    $('#gallonsPerFillup').text(`${carData.avgGallons.toFixed(2)} \xB1 ${carData.stdDevGallons.toFixed(2)}`);
-    $('#gasPrice').text(`$${carData.avgPricePerGallon.toFixed(2)} \xB1 $${carData.stdDevPricePerGallon.toFixed(2)}`);
-
-    showCarData(true);
-}
-
-function carSelectorChanged() {
-    updateCar();
-    refresh();
-}
-
-function showFormButtonClick() {
+document.getElementById('showFormButton').onclick = () => {
     showForm(true);
-}
+};
 
-function hideFormButtonClick() {
+document.getElementById('hideFormButton').onclick = () => {
     showForm(false);
-}
+};
 
-function canadaButtonClick() {
-    if ($('#gallons').val() === '' || $('#pricePerGallon').val() === '') {
-        $('#gallons').attr('placeholder', 'Liters');
-        $('#pricePerGallon').attr('placeholder', $('<div>').html('CA&#162; (cents) per liter').text());
+document.getElementById('canadaButton').onclick = async () => {
+    if (document.getElementById('gallons').value === '' || document.getElementById('pricePerGallon').value === '') {
+        document.getElementById('gallons').placeholder = 'Liters';
+        document.getElementById('pricePerGallon').placeholder = 'CAD per liter';
         return;
     }
 
     reportStatus(Status.Processing, null);
-    $.ajax({
-        type: 'GET',
-        contentType: 'application/json',
-        dataType: 'json',
-        url: '/getCADRate',
-        data: JSON.stringify({}),
-        success: canadaSuccessHandler,
-        error: errorHandler
-    });
-}
+    const response = await fetch('/api/getCADRate');
+    if (response.ok) {
+        const jsonData = await response.json();
+        const cadPerUsd = jsonData['cadPerUsd'];
+        const gallonsPerLiter = 0.264172;
 
-function canadaSuccessHandler(jsonData) {
-    const cadPerUsd = jsonData['cadPerUsd'];
-    const gallonsPerLiter = 0.264172;
+        const liters = document.getElementById('gallons').value;
+        document.getElementById('gallons').value = liters * gallonsPerLiter;
 
-    const liters = $('#gallons').val();
-    $('#gallons').val(liters * gallonsPerLiter);
+        const cadPerLiter = document.getElementById('pricePerGallon').value / 100.0;
+        document.getElementById('pricePerGallon').value = cadPerLiter / (cadPerUsd * gallonsPerLiter);
 
-    const cadPerLiter = $('#pricePerGallon').val() / 100.0;
-    $('#pricePerGallon').val(cadPerLiter / (cadPerUsd * gallonsPerLiter));
+        reportStatus(Status.Success, 'Retrieved ' + cadPerUsd + ' CAD/USD');
+    } else {
+        reportStatus(Status.Error, `Error getting CAD rate: ${response.status} - ${response.statusText} - ${await response.text()}`);
+    }
+};
 
-    reportStatus(Status.Success, 'Retrieved ' + cadPerUsd + ' CAD/USD');
-}
+document.getElementById('submitButton').onclick = async () => {
+    const carSelector = document.getElementById('carSelector');
+    const currentCar = carSelector.options[carSelector.selectedIndex].value;
 
-async function submitButtonClick() {
-    submitStart = new Date();
-
-    let password = $('#password').val();
-    let miles = parseFloat($('#miles').val());
-    let gallons = parseFloat($('#gallons').val());
-    let pricePerGallon = parseFloat($('#pricePerGallon').val());
+    const password = document.getElementById('password').value;
+    const miles = parseFloat(document.getElementById('miles').value);
+    const gallons = parseFloat(document.getElementById('gallons').value);
+    const pricePerGallon = parseFloat(document.getElementById('pricePerGallon').value);
+    const comments = document.getElementById('comments').value;
     if (isNaN(miles) || isNaN(gallons) || isNaN(pricePerGallon)) {
         alert('Invalid input!');
         return;
@@ -230,65 +190,55 @@ async function submitButtonClick() {
     reportStatus(Status.Processing, null);
 
     // Generate nonce and append to password.
-    let nonce = generateNonce();
-    let passwordPlusNonce = password + '.' + nonce;
-
-    // Hash the password using argon2. Parameters require ~10s on iPhone X.
-    let passwordNormalized = passwordPlusNonce.normalize("NFC");
-    let salt = new Uint32Array(16);
-    window.crypto.getRandomValues(salt);
-    let passwordHash = await argon2.hash({
-        pass: passwordNormalized,
-        salt: salt,
-        mem: 131072, // 128 MB                                                                                                                             
-        time: 16,
-        hashLen: 128,
-        parallelism: 4,
-        type: argon2.ArgonType.Argon2d
-    });
-
-    let payload = {
-        'passwordHash': passwordHash.encoded,
+    const nonce = generateNonce();
+    const passwordPlusNonce = password + '.' + nonce;
+    const passwordHash = await sha256(passwordPlusNonce);
+    const payload = {
+        'passwordHash': passwordHash,
         'nonce': nonce,
-        'car': car,
+        'car': currentCar,
         'miles': miles,
         'gallons': gallons,
         'pricePerGallon': pricePerGallon,
-        'comments': $('#comments').val()
+        'comments': comments
     };
 
-    $.ajax({
-        type: 'POST',
-        contentType: 'application/json',
-        dataType: 'json',
-        url: '/submit',
-        data: JSON.stringify(payload),
-        success: submitSuccessHandler,
-        error: errorHandler
+    const response = await fetch('/api/submit', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload)
     });
-}
+    if (response.ok) {
+        const responseData = await response.json();
+        reportStatus(Status.Success, `Successfully posted transaction in ${responseData.duration} ms! Reloading in 3 seconds.`);
+        setTimeout(() => {
+            updateCarData();
+        }, 3000);
+    } else {
+        reportStatus(Status.Error, `Error submitting ${response.status} - ${response.statusText} - ${await response.text()}`);
+    }
+};
 
-function submitSuccessHandler(jsonData) {
-    let durationMs = new Date() - submitStart;
-    cachedData = jsonData["data"];
-    reportStatus(Status.Success, 'Successfully posted transaction (' + durationMs + ' ms)');
-    refresh();
-}
-
-function errorHandler(xhr, ajaxOptions, thrownError) {
-    reportStatus(Status.Error, thrownError + ': ' + xhr.responseText);
-}
-
-$(document).ready(() => {
-    requestVersion();
-    $('#showFormButton').click(showFormButtonClick);
-    $('#hideFormButton').click(hideFormButtonClick);
-    $('#canadaButton').click(canadaButtonClick);
-    $('#submitButton').click(submitButtonClick);
-    $('#carSelector').change(carSelectorChanged);
+window.onload = async () => {
+    // Set initial visibility states.
     showForm(false);
     showCarData(false);
     reportStatus(Status.None, null);
-    updateCar();
-    requestCarData();
-});
+
+    // Populate versions only during page load.
+    const response = await fetch('/api/getVersion');
+    if (response.ok) {
+        const versions = await response.json();
+        document.getElementById('version').innerHTML =
+            `v${versions.appVersion}
+            <br />
+            ${versions.osVersion} | Node.js ${versions.nodeVersion}
+            <br />
+            MongoDB ${versions.mongoVersion} | Bootstrap 5.0.2`;
+    } else {
+        reportStatus(Status.Error, `Error getting version info: ${response.status} - ${response.statusText} - ${await response.text()}`);
+    }
+
+    // Initial car data fetch.
+    updateCarData();
+};

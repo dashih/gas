@@ -7,8 +7,8 @@ const fs = require('fs');
 const fsAsync = require('fs').promises;
 const path = require('path');
 const MongoClient = require('mongodb').MongoClient;
-const argon2 = require('argon2');
 const util = require('util');
+const crypto = require('crypto');
 const moment = require('moment');
 const axios = require('axios');
 
@@ -20,7 +20,7 @@ const httpsOptions = {
     cert: fs.readFileSync(config['sslCertFile']),
     ca: fs.readFileSync(config['sslCaFile'])
 };
-const submitPassword = Object.freeze(config['submitPassword'].normalize());
+const submitPassword = Object.freeze(config['submitPassword']);
 const db = Object.freeze(config['db']);
 const dbUser = Object.freeze(config['dbUser']);
 const dbPassword = Object.freeze(config['dbPassword']);
@@ -58,7 +58,7 @@ async function getMongoClient() {
         });
 }
 
-app.get('/getVersion', async (req, res) => {
+app.get('/api/getVersion', async (req, res) => {
     let packageJson = JSON.parse(await fsAsync.readFile('package.json', 'utf8'));
     let appVersion = packageJson['version'];
     let osInfo = await fsAsync.readFile('/etc/lsb-release', 'utf8');
@@ -86,7 +86,7 @@ app.get('/getVersion', async (req, res) => {
     }
 });
 
-app.get('/getCADRate', async (req, res) => {
+app.get('/api/getCADRate', async (req, res) => {
     try {
         const openExchangeReq = await axios.get(openExchangeRatesUrl);
         res.send({
@@ -98,7 +98,12 @@ app.get('/getCADRate', async (req, res) => {
     }
 });
 
-async function retrieveData(res) {
+app.post('/api/getCarData', async (req, res) => {
+    if (checkMaintenanceMode(res)) {
+        return;
+    }
+
+    const car = req.body.car;
     let startTime = moment();
 
     let client = await getMongoClient();
@@ -110,107 +115,97 @@ async function retrieveData(res) {
     try {
         let data = {};
         let gasDb = client.db(db);
-        let collections = await gasDb.listCollections().toArray();
-        collections = collections.filter(collection => collection !== 'nonces');
-        for (let collection of collections) {
-            let car = collection['name'];
-            data[car] = {};
-            data[car]['transactions'] = new Array();
+        data['transactions'] = new Array();
 
-            // Record the first and last fillup date to calculate average time between fills.
-            let firstDate = null;
-            let lastDate = null;
+        // Record the first and last fillup date to calculate average time between fills.
+        let firstDate = null;
+        let lastDate = null;
 
-            // Populate raw transaction data and calculate basic aggregate fields.
-            await gasDb.collection(car).find({}).sort({ date: -1 }).forEach(doc => {
-                // mpg and munny are generated (not stored in db)
-                doc['mpg'] = doc['miles'] / doc['gallons'];
-                doc['munny'] = doc['gallons'] * doc['pricePerGallon'];
+        // Populate raw transaction data and calculate basic aggregate fields.
+        await gasDb.collection(car).find({}).sort({ date: -1 }).forEach(doc => {
+            // mpg and munny are generated (not stored in db)
+            doc['mpg'] = doc['miles'] / doc['gallons'];
+            doc['munny'] = doc['gallons'] * doc['pricePerGallon'];
 
-                // The data is sorted most recent to least.
-                if (lastDate === null) {
-                    lastDate = moment(doc['date']);
+            // The data is sorted most recent to least.
+            if (lastDate === null) {
+                lastDate = moment(doc['date']);
+            }
+            firstDate = moment(doc['date']);
+
+            data['transactions'].push(doc);
+        });
+
+        // Populate complex aggregate fields using MongoDB.
+        await gasDb.collection(car).aggregate([
+            {
+                $group: {
+                    _id: null,
+                    numTransactions: { $sum: 1 },
+                    avgMpg: { $avg: { $divide: ['$miles', '$gallons'] } },
+                    stdDevMpg: { $stdDevSamp: { $divide: ['$miles', '$gallons'] } },
+                    minMpg: { $min: { $divide: ['$miles', '$gallons'] } },
+                    maxMpg: { $max: { $divide: ['$miles', '$gallons'] } },
+                    totalMunny: { $sum: { $multiply: ['$gallons', '$pricePerGallon'] } },
+                    avgMunny: { $avg: { $multiply: ['$gallons', '$pricePerGallon'] } },
+                    stdDevMunny: { $stdDevSamp: { $multiply: ['$gallons', '$pricePerGallon'] } },
+                    totalGallons: { $sum: '$gallons' },
+                    avgGallons: { $avg: '$gallons' },
+                    stdDevGallons: { $stdDevSamp: '$gallons' },
+                    totalMiles: { $sum: '$miles' },
+                    avgMiles: { $avg: '$miles' },
+                    stdDevMiles: { $stdDevSamp: '$miles' },
+                    avgPricePerGallon: { $avg: '$pricePerGallon' },
+                    stdDevPricePerGallon: { $stdDevSamp: '$pricePerGallon' }
                 }
-                firstDate = moment(doc['date']);
-
-                data[car]['transactions'].push(doc);
-            });
-
-            // Populate complex aggregate fields using MongoDB.
-            await gasDb.collection(car).aggregate([
-                {
-                    $group: {
-                        _id: null,
-                        numTransactions: { $sum: 1},
-                        avgMpg: { $avg: { $divide: ['$miles', '$gallons'] } },
-                        stdDevMpg: { $stdDevSamp: { $divide: ['$miles', '$gallons'] } },
-                        minMpg: { $min: { $divide: ['$miles', '$gallons'] } },
-                        maxMpg: { $max: { $divide: ['$miles', '$gallons'] } },
-                        totalMunny: { $sum: { $multiply: ['$gallons', '$pricePerGallon'] } },
-                        avgMunny: { $avg: { $multiply: ['$gallons', '$pricePerGallon'] } },
-                        stdDevMunny: { $stdDevSamp: { $multiply: ['$gallons', '$pricePerGallon'] } },
-                        totalGallons: { $sum: '$gallons' },
-                        avgGallons: { $avg: '$gallons' },
-                        stdDevGallons: { $stdDevSamp: '$gallons' },
-                        totalMiles: { $sum: '$miles' },
-                        avgMiles: { $avg: '$miles' },
-                        stdDevMiles: { $stdDevSamp: '$miles' },
-                        avgPricePerGallon: { $avg: '$pricePerGallon' },
-                        stdDevPricePerGallon: { $stdDevSamp: '$pricePerGallon' }
-                    }
+            }
+        ]).forEach(doc => {
+            for (let k in doc) {
+                if (k !== '_id') {
+                    data[k] = doc[k];
                 }
-            ]).forEach(doc => {
-                for (let k in doc) {
-                    if (k !== '_id') {
-                        data[car][k] = doc[k];
-                    }
-                }
+            }
 
-                let firstLastDiff = lastDate.diff(firstDate);
+            let firstLastDiff = lastDate.diff(firstDate);
 
-                // Dividing the difference between the last and first dates and the
-                // number of transactions gives the average time between fills.
-                data[car]['avgTimeBetween'] = moment.duration(firstLastDiff / doc['numTransactions']).asDays();
+            // Dividing the difference between the last and first dates and the
+            // number of transactions gives the average time between fills.
+            data['avgTimeBetween'] = moment.duration(firstLastDiff / doc['numTransactions']).asDays();
 
-                // Populate date range string.
-                data[car]['dateRange'] = util.format(
-                    "%s years (%s to %s)",
-                    moment.duration(firstLastDiff).asYears().toFixed(1),
-                    firstDate.format("MMM YYYY"),
-                    lastDate.format("MMM YYYY"));
-            });
-        }
+            // Populate date range string.
+            data['dateRange'] = util.format(
+                "%s years (%s to %s)",
+                moment.duration(firstLastDiff).asYears().toFixed(1),
+                firstDate.format("MMM YYYY"),
+                lastDate.format("MMM YYYY"));
+        });
 
         let duration = moment().diff(startTime, "milliseconds");
         res.send({
-            "data": data,
+            "carData": data,
             "duration": duration
         });
     } catch (err) {
+        console.error(err);
         res.status(500).send(err);
     } finally {
         client.close();
     }
-}
-
-app.post('/request', async (req, res) => {
-    if (checkMaintenanceMode(res)) {
-        return;
-    }
-
-    await retrieveData(res);
 });
 
-app.post('/submit', async (req, res) => {
+app.post('/api/submit', async (req, res) => {
+    const startTime = moment();
+
     if (checkMaintenanceMode(res)) {
         return;
     }
 
     // Check the password.
-    let nonce = req.body.nonce;
-    let passwordPlusNonce = util.format('%s.%s', submitPassword, nonce);
-    let passwordHash = req.body.passwordHash.normalize("NFC");
-    if (!await argon2.verify(passwordHash, passwordPlusNonce)) {
+    const nonce = req.body.nonce;
+    const passwordPlusNonce = util.format('%s.%s', submitPassword, nonce);
+    const passwordHash = crypto.createHash('sha256').update(passwordPlusNonce).digest('hex');
+    if (passwordHash !== req.body.passwordHash) {
+        console.log('authentication with wrong password detected.');
         res.status(401).send("Wrong password");
         return;
     }
@@ -243,13 +238,13 @@ app.post('/submit', async (req, res) => {
         
         await client.db(db).collection(nonceCollection).insertOne({ nonce: nonce });
         await client.db(db).collection(req.body.car).insertOne(transaction);
-
-        // Trigger another full retrieve.
-        await retrieveData(res);
+        
+        res.send( { duration: moment().diff(startTime, "milliseconds") } );
     } catch (err) {
         if (err === 'Nonce exists!') {
             res.status(401).send(err);
         } else {
+            console.error(err);
             res.status(500).send(err);
         }
     } finally {
