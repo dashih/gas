@@ -33,7 +33,7 @@ const openExchangeRatesUrl = Object.freeze(
 // Maintenance mode
 const maintenanceModeFile = Object.freeze('maintenance.lock');
 
-const nonceCollection = Object.freeze('nonces');
+const dbCollection = Object.freeze('transactions');
 
 // Setup express
 const app = express();
@@ -122,7 +122,7 @@ app.post('/api/getCarData', async (req, res) => {
         let lastDate = null;
 
         // Populate raw transaction data and calculate basic aggregate fields.
-        await gasDb.collection(car).find({}).sort({ date: -1 }).forEach(doc => {
+        await gasDb.collection(dbCollection).find({car: car}).sort({ date: -1 }).forEach(doc => {
             // mpg and munny are generated (not stored in db)
             doc['mpg'] = doc['miles'] / doc['gallons'];
             doc['munny'] = doc['gallons'] * doc['pricePerGallon'];
@@ -137,7 +137,10 @@ app.post('/api/getCarData', async (req, res) => {
         });
 
         // Populate complex aggregate fields using MongoDB.
-        await gasDb.collection(car).aggregate([
+        await gasDb.collection(dbCollection).aggregate([
+            {
+                $match: { car: car }
+            },
             {
                 $group: {
                     _id: null,
@@ -211,15 +214,12 @@ app.post('/api/submit', async (req, res) => {
 
     const car = req.body.car;
 
-    // Delete the passwordHash field.
-    // Delete the car field, because we use a MongoDB collection for each car.
+    // Delete the passwordHash.
     const transaction = JSON.parse(JSON.stringify(req.body));
     delete transaction.passwordHash;
-    delete transaction.nonce;
-    delete transaction.car;
 
     // Set the date field to now.
-    transaction['date'] = new Date();
+    transaction['date'] = new Date().toISOString();
 
     // Write to db.
     const client = await getMongoClient();
@@ -230,13 +230,12 @@ app.post('/api/submit', async (req, res) => {
 
     try {
         // Check the nonce.
-        const nonceRecord = await client.db(db).collection(nonceCollection).findOne({ nonce: nonce });
+        const nonceRecord = await client.db(db).collection(dbCollection).findOne({ nonce: nonce });
         if (nonceRecord !== null) {
             throw 'Nonce exists!';
         }
         
-        await client.db(db).collection(nonceCollection).insertOne({ nonce: nonce });
-        await client.db(db).collection(req.body.car).insertOne(transaction);
+        await client.db(db).collection(dbCollection).insertOne(transaction);
         
         res.send( { duration: moment().diff(startTime, "milliseconds") } );
     } catch (err) {
