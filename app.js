@@ -10,6 +10,7 @@ const MongoClient = require('mongodb').MongoClient;
 const util = require('util');
 const crypto = require('crypto');
 const moment = require('moment');
+const os = require('os');
 const axios = require('axios');
 
 // Parse config
@@ -62,9 +63,6 @@ async function getMongoClient() {
 
 app.get('/api/getVersion', async (req, res) => {
     const packageJson = JSON.parse(await fsAsync.readFile('package.json', 'utf8'));
-    const appVersion = packageJson['version'];
-    const osInfo = await fsAsync.readFile('/etc/lsb-release', 'utf8');
-    const osVersion = osInfo.match(/DISTRIB_DESCRIPTION=\"(?<vers>.+)\"/).groups['vers'];
     const client = await getMongoClient();
     if (client == null) {
         res.status(500).send("Error connecting to MongoDB. See logs.");
@@ -74,8 +72,8 @@ app.get('/api/getVersion', async (req, res) => {
     try {
         const mongoInfo = await client.db(db).admin().serverInfo();
         res.send({
-            osVersion: osVersion,
-            appVersion: appVersion,
+            osVersion: `${os.type()} ${os.release().replace('-generic', '')}`,
+            appVersion: packageJson['version'],
             nodeVersion: process.version,
             mongoVersion: mongoInfo.version,
             expressVersion: packageJson['dependencies']['express']
