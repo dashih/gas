@@ -24,7 +24,6 @@
   "dependencies": {
     "axios": "^0.21.1",
     "express": "^4.17.1",
-    "https": "^1.0.0",
     "moment": "^2.29.1",
     "mongodb": "^3.7.3"
   }

@@ -1,11 +1,10 @@
 'use strict';
 
 const express = require('express');
-const https = require('https');
+const http = require('http');
 const bodyParser = require('body-parser');
 const fs = require('fs');
 const fsAsync = require('fs').promises;
-const path = require('path');
 const MongoClient = require('mongodb').MongoClient;
 const util = require('util');
 const crypto = require('crypto');
@@ -15,12 +14,7 @@ const axios = require('axios');
 
 // Parse config
 const config = JSON.parse(fs.readFileSync('config.json', 'utf8'));
-const httpsPort = config['port'];
-const httpsOptions = {
-    key: fs.readFileSync(config['sslKeyFile']),
-    cert: fs.readFileSync(config['sslCertFile']),
-    ca: fs.readFileSync(config['sslCaFile'])
-};
+const port = config['port'];
 const submitPassword = Object.freeze(config['submitPassword']);
 const db = Object.freeze(config['db']);
 const dbUser = Object.freeze(config['dbUser']);
@@ -251,4 +245,4 @@ app.post('/api/submit', async (req, res) => {
     }
 });
 
-https.createServer(httpsOptions, app).listen(httpsPort);
+http.createServer(app).listen(port);
