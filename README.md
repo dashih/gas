@@ -14,3 +14,4 @@ Track MPG and other stats for Danny's cars.
 | 8       | Maintenance mode |
 | 9       | Security - nonces |
 | 10      | Major front-end rewrite to remove the jQuery dependency (thanks to the Fetch API) |
+| 11      | Dockerization |
