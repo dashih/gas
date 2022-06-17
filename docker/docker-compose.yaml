@@ -1,0 +1,30 @@
+version: '3.1'
+
+services:
+  gas:
+    image: node:16
+    container_name: gas_app
+    restart: unless-stopped
+    working_dir: /home/node/app
+    ports:
+      - 8002:80
+    environment:
+      NODE_ENV: production
+      GAS_DB_HOST: db
+    volumes:
+      - /var/opt/gas/config:/home/node/app/config
+      - ./deploy.sh:/usr/local/bin/deploy.sh
+    command: deploy.sh
+
+  db:
+    image: mongo:5.0.9
+    container_name: gas_db
+    restart: unless-stopped
+    ports:
+      - 7002:27017
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: root
+      MONGO_INITDB_ROOT_PASSWORD_FILE: /credentials/mongodb_root_password.txt
+    volumes:
+      - /var/opt/gas/config/mongodb_root_password.txt:/credentials/mongodb_root_password.txt
+      - /var/opt/gas/db:/data/db
