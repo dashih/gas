@@ -19,11 +19,8 @@ const submitPassword = Object.freeze(config['submitPassword']);
 const db = Object.freeze(config['db']);
 const dbUser = Object.freeze(config['dbUser']);
 const dbPassword = Object.freeze(config['dbPassword']);
-const dbFormat = Object.freeze(util.format('mongodb://%%s:%%s@%s', process.env.GAS_DB_HOST));
-const openExchangeRatesUrl = Object.freeze(
-    util.format(
-        'https://openexchangerates.org/api/latest.json?app_id=%s',
-        config['openExchangeRatesAppId']));
+const dbFormat = Object.freeze(`mongodb://%%s:%%s@${process.env.GAS_DB_HOST}`);
+const openExchangeRatesUrl = Object.freeze(`https://openexchangerates.org/api/latest.json?app_id=${config['openExchangeRatesAppId']}`);
 
 // Maintenance mode
 const maintenanceModeFile = Object.freeze('maintenance.lock');
@@ -137,11 +134,8 @@ async function populateAggregateData(client, data, carCondition) {
         .find(carCondition).sort({ date: -1 }).limit(1).toArray())[0].date);
     const firstLastDiff = lastDate.diff(firstDate);
     data['avgTimeBetween'] = moment.duration(firstLastDiff / data.numTransactions).asDays();
-    data['dateRange'] = util.format(
-        '%s years | %s-%s',
-        moment.duration(firstLastDiff).asYears().toFixed(1),
-        firstDate.format('YYYY'),
-        lastDate.format('YYYY'));
+    data['dateRange'] =
+        `${moment.duration(firstLastDiff).asYears().toFixed(1)} years | ${firstDate.format('YYYY')}-${lastDate.format('YYYY')}`;
 }
 
 app.post('/api/getCarData', async (req, res) => {
@@ -199,7 +193,7 @@ app.post('/api/submit', async (req, res) => {
 
     // Check the password.
     const nonce = req.body.nonce;
-    const passwordPlusNonce = util.format('%s.%s', submitPassword, nonce);
+    const passwordPlusNonce = `${submitPassword}.${nonce}`;
     const passwordHash = crypto.createHash('sha256').update(passwordPlusNonce).digest('hex');
     if (passwordHash !== req.body.passwordHash) {
         console.log('authentication with wrong password detected.');
