@@ -157,8 +157,8 @@ document.getElementById('hideFormButton').onclick = () => {
 
 document.getElementById('canadaButton').onclick = async () => {
     if (document.getElementById('gallons').value === '' || document.getElementById('pricePerGallon').value === '') {
-        document.getElementById('gallons').placeholder = 'Liters';
-        document.getElementById('pricePerGallon').placeholder = 'CAD per liter';
+        document.getElementById('gallonsLabel').innerText = 'Liters';
+        document.getElementById('pricePerGallonLabel').innerText = 'CAD per liter';
         return;
     }
 
