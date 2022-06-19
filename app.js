@@ -6,7 +6,6 @@ const bodyParser = require('body-parser');
 const fs = require('fs');
 const fsAsync = require('fs').promises;
 const MongoClient = require('mongodb').MongoClient;
-const util = require('util');
 const crypto = require('crypto');
 const moment = require('moment');
 const os = require('os');
@@ -19,7 +18,6 @@ const submitPassword = Object.freeze(config['submitPassword']);
 const db = Object.freeze(config['db']);
 const dbUser = Object.freeze(config['dbUser']);
 const dbPassword = Object.freeze(config['dbPassword']);
-const dbFormat = Object.freeze(`mongodb://%%s:%%s@${process.env.GAS_DB_HOST}`);
 const openExchangeRatesUrl = Object.freeze(`https://openexchangerates.org/api/latest.json?app_id=${config['openExchangeRatesAppId']}`);
 
 // Maintenance mode
@@ -45,7 +43,7 @@ function checkMaintenanceMode(res) {
 
 async function getMongoClient() {
     return await MongoClient.connect(
-        util.format(dbFormat, dbUser, encodeURIComponent(dbPassword)),
+        `mongodb://${dbUser}:${encodeURIComponent(dbPassword)}@${process.env.GAS_DB_HOST}`,
         { useNewUrlParser: true, useUnifiedTopology: true })
         .catch(connErr => {
             console.error(connErr);
