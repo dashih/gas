@@ -11,6 +11,7 @@ services:
     environment:
       NODE_ENV: production
       GAS_DB_HOST: db
+      GAS_CONFIG: /home/node/app/config/config.json
     volumes:
       - /var/opt/gas/config:/home/node/app/config
       - ./deploy.sh:/usr/local/bin/deploy.sh

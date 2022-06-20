@@ -12,7 +12,7 @@ const os = require('os');
 const axios = require('axios');
 
 // Parse config
-const config = JSON.parse(fs.readFileSync('config.json', 'utf8'));
+const config = JSON.parse(fs.readFileSync(process.env.GAS_CONFIG, 'utf8'));
 const port = config['port'];
 const submitPassword = Object.freeze(config['submitPassword']);
 const db = Object.freeze(config['db']);
@@ -237,4 +237,5 @@ app.post('/api/submit', async (req, res) => {
     }
 });
 
+console.log(`Listening on port ${port}`);
 http.createServer(app).listen(port);

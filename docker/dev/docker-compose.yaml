@@ -1,0 +1,43 @@
+version: '3.1'
+
+services:
+  nginx:
+    container_name: gas_dev_nginx
+    image: nginx
+    restart: unless-stopped
+    ports:
+      - 44300:8443
+    volumes:
+      - ./nginx/conf.d:/etc/nginx/conf.d
+      - ./nginx/tls:/etc/nginx/tls
+
+  gas:
+    image: node:16
+    container_name: gas_dev_app
+    restart: unless-stopped
+    working_dir: /home/node/app
+    environment:
+      NODE_ENV: production
+      GAS_DB_HOST: db
+      GAS_CONFIG: /home/node/app/docker/dev/config/config.json
+    volumes:
+      - ../../:/home/node/app
+    command: node /home/node/app/app.js
+
+  db:
+    image: mongo:5.0.9
+    container_name: gas_dev_db
+    restart: unless-stopped
+    ports:
+      - 7000:27017
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: root
+      MONGO_INITDB_ROOT_PASSWORD_FILE: /credentials/mongodb_root_password.txt
+    volumes:
+      - ./config/mongodb_root_password.txt:/credentials/mongodb_root_password.txt
+      - gas_dev_db:/data/db
+      - gas_dev_dbconfigsvr:/data/configdb
+
+volumes:
+  gas_dev_db:
+  gas_dev_dbconfigsvr:
