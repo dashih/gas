@@ -119,7 +119,7 @@ async function populateAggregateData(client, data, carCondition) {
     ]).forEach(doc => {
         for (const k in doc) {
             if (k !== '_id') {
-                data[k] = doc[k];
+                data[k] = doc[k] === null ? 0.0 : doc[k];
             }
         }
     });
