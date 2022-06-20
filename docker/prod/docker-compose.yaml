@@ -29,3 +29,4 @@ services:
     volumes:
       - /var/opt/gas/config/mongodb_root_password.txt:/credentials/mongodb_root_password.txt
       - /var/opt/gas/db:/data/db
+      - /var/opt/gas/db-configsvr:/data/configdb
