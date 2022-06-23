@@ -16,6 +16,8 @@ services:
       - /var/opt/gas/config:/home/node/app/config
       - ./deploy.sh:/usr/local/bin/deploy.sh
     command: deploy.sh
+    healthcheck:
+      test: curl --fail http://localhost:80
 
   db:
     image: mongo:5.0.9
@@ -30,3 +32,5 @@ services:
       - /var/opt/gas/config/mongodb_root_password.txt:/credentials/mongodb_root_password.txt
       - /var/opt/gas/db:/data/db
       - /var/opt/gas/db-configsvr:/data/configdb
+    healthcheck:
+      test: echo 'db.runCommand("ping").ok' | mongosh localhost/test --quiet

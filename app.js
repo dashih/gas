@@ -78,6 +78,7 @@ app.get('/api/getVersion', async (req, res) => {
 app.get('/api/getCADRate', async (req, res) => {
     try {
         const openExchangeReq = await axios.get(openExchangeRatesUrl);
+        console.log(`retrieved CAD rate ${openExchangeReq.data.rates.CAD}`);
         res.send({
             cadPerUsd: openExchangeReq.data.rates.CAD
         });
@@ -169,6 +170,7 @@ app.post('/api/getCarData', async (req, res) => {
             await populateAggregateData(client, lifetimeData, {});
         }
 
+        console.log(`retrieved data for ${car}`);
         res.send({
             carData: data,
             lifetimeData: lifetimeData,
@@ -222,9 +224,11 @@ app.post('/api/submit', async (req, res) => {
             throw 'Nonce exists!';
         }
         
-        await client.db(db).collection(dbCollection).insertOne(transaction);
-        
-        res.send( { duration: moment().diff(startTime, "milliseconds") } );
+        const insertResult = await client.db(db).collection(dbCollection).insertOne(transaction);
+        if (insertResult.result.ok) {
+            console.log(`inserted ${insertResult.insertedId} into the db`);
+            res.send({ duration: moment().diff(startTime, "milliseconds") });
+        }
     } catch (err) {
         if (err === 'Nonce exists!') {
             res.status(401).send(err);
