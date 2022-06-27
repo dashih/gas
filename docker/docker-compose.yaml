@@ -10,6 +10,10 @@ services:
     volumes:
       - ./nginx/conf.d:/etc/nginx/conf.d
       - ./nginx/tls:/etc/nginx/tls
+      # htpasswd -Bc -C 12 .htpasswd gas (lovegood)
+      - ./nginx/.htpasswd:/var/www/static/.htpasswd
+    healthcheck:
+      test: curl --fail --insecure https://localhost:8443/api/getVersion
 
   gas:
     image: node:16

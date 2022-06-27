@@ -6,7 +6,6 @@ const bodyParser = require('body-parser');
 const fs = require('fs');
 const fsAsync = require('fs').promises;
 const MongoClient = require('mongodb').MongoClient;
-const crypto = require('crypto');
 const moment = require('moment');
 const os = require('os');
 const axios = require('axios');
@@ -14,7 +13,6 @@ const axios = require('axios');
 // Parse config
 const config = JSON.parse(fs.readFileSync(process.env.GAS_CONFIG, 'utf8'));
 const port = config['port'];
-const submitPassword = Object.freeze(config['submitPassword']);
 const db = Object.freeze(config['db']);
 const dbUser = Object.freeze(config['dbUser']);
 const dbPassword = Object.freeze(config['dbPassword']);
@@ -191,21 +189,8 @@ app.post('/api/submit', async (req, res) => {
         return;
     }
 
-    // Check the password.
     const nonce = req.body.nonce;
-    const passwordPlusNonce = `${submitPassword}.${nonce}`;
-    const passwordHash = crypto.createHash('sha256').update(passwordPlusNonce).digest('hex');
-    if (passwordHash !== req.body.passwordHash) {
-        console.log('authentication with wrong password detected.');
-        res.status(401).send("Wrong password");
-        return;
-    }
-
-    const car = req.body.car;
-
-    // Delete the passwordHash.
-    const transaction = JSON.parse(JSON.stringify(req.body));
-    delete transaction.passwordHash;
+    const transaction = req.body;
 
     // Set the date field to now.
     transaction['date'] = new Date().toISOString();
