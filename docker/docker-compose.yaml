@@ -6,7 +6,7 @@ services:
     image: nginx
     restart: unless-stopped
     ports:
-      - "44300:8443"
+      - "127.0.0.1:44300:8443"
     volumes:
       - ./nginx/conf.d:/etc/nginx/conf.d
       - ./nginx/tls:/etc/nginx/tls
@@ -23,9 +23,9 @@ services:
     environment:
       NODE_ENV: production
       GAS_DB_HOST: db
-      GAS_CONFIG: /home/node/app/docker/dev/config/config.json
+      GAS_CONFIG: /home/node/app/docker/config/config.json
     volumes:
-      - ../../:/home/node/app
+      - ../:/home/node/app
     command: node /home/node/app/app.js
     healthcheck:
       test: curl --fail http://localhost:80
@@ -35,7 +35,7 @@ services:
     container_name: gas_dev_db
     restart: unless-stopped
     ports:
-      - "7000:27017"
+      - "127.0.0.1:7000:27017"
     environment:
       MONGO_INITDB_ROOT_USERNAME: root
       MONGO_INITDB_ROOT_PASSWORD_FILE: /credentials/mongodb_root_password.txt
