@@ -208,7 +208,11 @@ document.getElementById('submitButton').onclick = async () => {
             updateCarData();
         }, 2000);
     } else {
-        reportStatus(Status.Error, `Error submitting ${response.status} - ${response.statusText} - ${await response.text()}`);
+        if (response.status === 400) {
+            reportStatus(Status.Error, 'No required TLS certificate was sent');
+        } else {
+            reportStatus(Status.Error, `Error submitting ${response.status} - ${response.statusText} - ${await response.text()}`);
+        }
     }
 };
 
