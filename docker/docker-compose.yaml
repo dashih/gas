@@ -14,17 +14,12 @@ services:
       test: curl --fail --insecure https://localhost:8443/api/getVersion
 
   gas:
-    image: node:16
+    image: spacechip/gas
     container_name: gas_dev_app
     restart: unless-stopped
-    working_dir: /home/node/app
     environment:
-      NODE_ENV: production
       GAS_DB_HOST: db
       GAS_CONFIG: /home/node/app/docker/config/config.json
-    volumes:
-      - ../:/home/node/app
-    command: node /home/node/app/app.js
     healthcheck:
       test: curl --fail http://localhost:80
 
