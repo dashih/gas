@@ -14,14 +14,13 @@ services:
       test: curl --fail --insecure https://localhost:8443/api/getVersion
 
   gas:
-    image: spacechip/gas
+    image: dannyshih/gas:v11.1.4
     container_name: gas_dev_app
     restart: unless-stopped
     environment:
       GAS_DB_HOST: db
-      GAS_CONFIG: /home/node/app/docker/config/config.json
-    healthcheck:
-      test: curl --fail http://localhost:80
+    volumes:
+      - ./config/config.json:/home/node/app/config.json
 
   db:
     image: mongo:5.0.9

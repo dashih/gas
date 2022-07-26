@@ -11,7 +11,7 @@ const os = require('os');
 const axios = require('axios');
 
 // Parse config
-const config = JSON.parse(fs.readFileSync(process.env.GAS_CONFIG, 'utf8'));
+const config = JSON.parse(fs.readFileSync('config.json', 'utf8'));
 const port = config['port'];
 const db = Object.freeze(config['db']);
 const dbUser = Object.freeze(config['dbUser']);
