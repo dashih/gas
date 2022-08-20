@@ -1,22 +1,12 @@
-version: '3.1'
+version: '3.8'
 
 services:
-  nginx:
-    container_name: gas_dev_nginx
-    image: nginx
-    restart: unless-stopped
-    ports:
-      - "127.0.0.1:44300:8443"
-    volumes:
-      - ./nginx/conf.d:/etc/nginx/conf.d
-      - ./nginx/tls:/etc/nginx/tls
-    healthcheck:
-      test: curl --fail --insecure https://localhost:8443/api/getVersion
-
   gas:
     image: dannyshih/gas:v11.1.4
     container_name: gas_dev_app
     restart: unless-stopped
+    ports:
+      - "8000:80"
     environment:
       GAS_DB_HOST: db
     volumes:
@@ -27,16 +17,13 @@ services:
     container_name: gas_dev_db
     restart: unless-stopped
     ports:
-      - "127.0.0.1:7000:27017"
+      - "8001:27017"
     environment:
       MONGO_INITDB_ROOT_USERNAME: root
-      MONGO_INITDB_ROOT_PASSWORD_FILE: /credentials/mongodb_root_password.txt
+      MONGO_INITDB_ROOT_PASSWORD: dumbledore
     volumes:
-      - ./config/mongodb_root_password.txt:/credentials/mongodb_root_password.txt
       - gas_dev_db:/data/db
       - gas_dev_dbconfigsvr:/data/configdb
-    healthcheck:
-      test: echo 'db.runCommand("ping").ok' | mongosh localhost/test --quiet
 
 volumes:
   gas_dev_db:
