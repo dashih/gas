@@ -1,4 +1,4 @@
-FROM node:16.17.0
+FROM node:18.12.0
 WORKDIR /home/node/app
 COPY . .
 EXPOSE 80
