@@ -22,7 +22,6 @@
   },
   "homepage": "https://github.com/dashih/gas#readme",
   "dependencies": {
-    "axios": "^0.21.1",
     "express": "^4.17.1",
     "moment": "^2.29.1",
     "mongodb": "^3.7.3"

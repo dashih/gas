@@ -8,7 +8,6 @@ const fsAsync = require('fs').promises;
 const MongoClient = require('mongodb').MongoClient;
 const moment = require('moment');
 const os = require('os');
-const axios = require('axios');
 
 // Parse config
 const config = JSON.parse(fs.readFileSync('config.json', 'utf8'));
@@ -75,11 +74,15 @@ app.get('/api/getVersion', async (req, res) => {
 
 app.get('/api/getCADRate', async (req, res) => {
     try {
-        const openExchangeReq = await axios.get(openExchangeRatesUrl);
-        console.log(`retrieved CAD rate ${openExchangeReq.data.rates.CAD}`);
-        res.send({
-            cadPerUsd: openExchangeReq.data.rates.CAD
-        });
+        const openExchangeReq = await fetch(openExchangeRatesUrl);
+        if (openExchangeReq.ok) {
+            console.log(`retrieved CAD rate ${openExchangeReq.data.rates.CAD}`);
+            res.send({
+                cadPerUsd: openExchangeReq.data.rates.CAD
+            });
+        } else {
+            throw new Error('non-ok status fetching currency exchange rates');
+        }
     } catch (err) {
         console.error(err);
         res.status(500).send('Error retrieving currency exchange rates.');
