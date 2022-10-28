@@ -76,9 +76,11 @@ app.get('/api/getCADRate', async (req, res) => {
     try {
         const openExchangeReq = await fetch(openExchangeRatesUrl);
         if (openExchangeReq.ok) {
-            console.log(`retrieved CAD rate ${openExchangeReq.data.rates.CAD}`);
+            const openExchangeRatesJson = await openExchangeReq.json();
+            const cadPerUsd = openExchangeRatesJson.rates.CAD;
+            console.log(`retrieved CAD rate ${cadPerUsd}`);
             res.send({
-                cadPerUsd: openExchangeReq.data.rates.CAD
+                cadPerUsd: cadPerUsd
             });
         } else {
             throw new Error('non-ok status fetching currency exchange rates');
