@@ -2,7 +2,7 @@ version: '3.8'
 
 services:
   gas:
-    image: dannyshih/gas:v11.2.4
+    image: dannyshih/gas:v11.2.5
     container_name: gas_dev_app
     restart: unless-stopped
     ports:
@@ -13,7 +13,7 @@ services:
       - ./config/config.json:/home/node/app/config.json
 
   db:
-    image: mongo:6.0.2
+    image: mongo:6.0.5
     container_name: gas_dev_db
     restart: unless-stopped
     ports:
