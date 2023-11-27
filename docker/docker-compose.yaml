@@ -2,7 +2,7 @@ version: '3.8'
 
 services:
   gas:
-    image: dannyshih/gas:v11.3.0
+    image: dannyshih/gas:v11.4.1
     container_name: gas_dev_app
     restart: unless-stopped
     ports:
