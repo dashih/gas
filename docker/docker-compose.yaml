@@ -1,6 +1,6 @@
 services:
   gas:
-    image: dannyshih/gas:v11.4.1
+    image: dannyshih/gas:v12.0.2
     container_name: gas_dev_app
     restart: unless-stopped
     ports:
