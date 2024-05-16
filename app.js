@@ -98,7 +98,7 @@ app.get('/api/getCADRate', async (req, res) => {
 async function populateLifetimeRange(client, lifetimeData) {
     const oldestGasRecord = await client.db(db).collection(dbCollection).find({}).sort().limit(1);
     const newestEvRecord = await client.db(evDb).collection(dbCollection).find({}).sort({ date: -1 }).limit(1);
-    if (oldestGasRecord.hasNext() && newestEvRecord.hasNext()) {
+    if (await oldestGasRecord.hasNext() && await newestEvRecord.hasNext()) {
         const oldest = moment((await oldestGasRecord.next())['date']);
         const newest = moment((await newestEvRecord.next())['date']);
         const firstLastDiff = newest.diff(oldest);
