@@ -245,9 +245,8 @@ document.getElementById('hideFormButton').onclick = () => {
 };
 
 document.getElementById('canadaButton').onclick = async () => {
-    if (document.getElementById('gallons').value === '' || document.getElementById('pricePerGallon').value === '') {
-        document.getElementById('gallonsLabel').innerText = 'Liters';
-        document.getElementById('pricePerGallonLabel').innerText = 'CAD per liter';
+    if (document.getElementById('pricePerKWh').value === '') {
+        document.getElementById('pricePerKWhLabel').innerText = 'CAD per kWh';
         return;
     }
 
@@ -256,13 +255,9 @@ document.getElementById('canadaButton').onclick = async () => {
     if (response.ok) {
         const jsonData = await response.json();
         const cadPerUsd = jsonData['cadPerUsd'];
-        const gallonsPerLiter = 0.264172;
 
-        const liters = document.getElementById('gallons').value;
-        document.getElementById('gallons').value = liters * gallonsPerLiter;
-
-        const cadPerLiter = document.getElementById('pricePerGallon').value / 100.0;
-        document.getElementById('pricePerGallon').value = cadPerLiter / (cadPerUsd * gallonsPerLiter);
+        const cadPerKWh = document.getElementById('pricePerKWh').value;
+        document.getElementById('pricePerKWh').value = cadPerKWh / cadPerUsd;
 
         reportStatus(Status.Success, 'Retrieved ' + cadPerUsd + ' CAD/USD');
     } else {
