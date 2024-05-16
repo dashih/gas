@@ -93,6 +93,21 @@ app.get('/api/getCADRate', async (req, res) => {
 });
 
 /*
+ * The one metric that spans both gas cars and EVs
+ */
+async function populateLifetimeRange(client, lifetimeData) {
+    const oldestGasRecord = await client.db(db).collection(dbCollection).find({}).sort().limit(1);
+    const newestEvRecord = await client.db(evDb).collection(dbCollection).find({}).sort({ date: -1 }).limit(1);
+    if (oldestGasRecord.hasNext() && newestEvRecord.hasNext()) {
+        const oldest = moment((await oldestGasRecord.next())['date']);
+        const newest = moment((await newestEvRecord.next())['date']);
+        const firstLastDiff = newest.diff(oldest);
+        lifetimeData['dateRange'] =
+            `${moment.duration(firstLastDiff).asYears().toFixed(1)} years | ${oldest.format('YYYY')}-${newest.format('YYYY')}`;
+    }
+}
+
+/*
  * Aggregate data is calculated for both the current car and lifetime.
  */
 async function populateAggregateData(client, data, carCondition) {
@@ -174,6 +189,7 @@ app.post('/api/getCarData', async (req, res) => {
             await populateAggregateData(client, lifetimeData, {});
         }
 
+        await populateLifetimeRange(client, lifetimeData);
         console.log(`retrieved data for ${car}`);
         res.send({
             carData: data,
@@ -270,6 +286,7 @@ app.post('/api/getEVData', async (req, res) => {
             await populateAggregateEVData(client, lifetimeData, {});
         }
 
+        await populateLifetimeRange(client, lifetimeData);
         console.log(`retrieved data for ${car}`);
         res.send({
             carData: data,
