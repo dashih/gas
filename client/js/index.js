@@ -105,7 +105,7 @@ async function updateEVData(currentCar) {
             const newRow = transactionsTableBody.insertRow();
             newRow.innerHTML = `
                 <td>${dateTime}</td>
-                <td>${cur.chargerType}</td>
+                <td>${cur.chargerType}-${cur.chargerMax}</td>
                 <td>${cur.miles}</td>
                 <td>${cur.kWhs.toFixed(2)}</td>
                 <td>${cur.prettyTime}</td>
