@@ -96,7 +96,7 @@ app.get('/api/getCADRate', async (req, res) => {
  * The one metric that spans both gas cars and EVs
  */
 async function populateLifetimeRange(client, lifetimeData) {
-    const oldestGasRecord = await client.db(db).collection(dbCollection).find({}).sort().limit(1);
+    const oldestGasRecord = await client.db(db).collection(dbCollection).find({}).sort({ date: 1 }).limit(1);
     const newestEvRecord = await client.db(evDb).collection(dbCollection).find({}).sort({ date: -1 }).limit(1);
     if (await oldestGasRecord.hasNext() && await newestEvRecord.hasNext()) {
         const oldest = moment((await oldestGasRecord.next())['date']);
