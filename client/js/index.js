@@ -119,6 +119,7 @@ async function updateEVData(currentCar) {
         }
 
         // Populate summary table for the current car.
+        document.getElementById('evPricePerMile').innerText = `$${carData.pricePerMile.toFixed(2)}`;
         document.getElementById('numCharges').innerText = carData.numTransactions;
         document.getElementById('mpKWh').innerText = `${carData.avgMpKWh.toFixed(2)} \xB1 ${carData.stdDevMpKWh.toFixed(2)}`;
         document.getElementById('evTotalMiles').innerText = parseFloat(carData.totalMiles.toFixed(2)).toLocaleString();
@@ -133,6 +134,7 @@ async function updateEVData(currentCar) {
         document.getElementById('kWhPrice').innerText = `$${carData.avgPricePerKWh.toFixed(2)} \xB1 $${carData.stdDevPricePerKWh.toFixed(2)}`;
 
         // Populate summary table for lifetime data.
+        document.getElementById('evPricePerMileLifetime').innerText = `$${lifetimeData.pricePerMile.toFixed(2)}`;
         document.getElementById('numChargesLifetime').innerText = lifetimeData.numTransactions;
         document.getElementById('mpKWhLifetime').innerText = `${lifetimeData.avgMpKWh.toFixed(2)} \xB1 ${lifetimeData.stdDevMpKWh.toFixed(2)}`;
         document.getElementById('evTotalMilesLifetime').innerText = parseFloat(lifetimeData.totalMiles.toFixed(2)).toLocaleString();
@@ -205,6 +207,7 @@ async function updateGasCarData(currentCar) {
         }
 
         // Populate summary table for the current car.
+        document.getElementById('pricePerMile').innerText = `$${carData.pricePerMile.toFixed(2)}`;
         document.getElementById('numFillups').innerText = carData.numTransactions;
         document.getElementById('mpg').innerText = `${carData.avgMpg.toFixed(2)} \xB1 ${carData.stdDevMpg.toFixed(2)}`;
         document.getElementById('mpgMaxMin').innerText = `${carData.minMpg.toFixed(2)} - ${carData.maxMpg.toFixed(2)}`;
@@ -218,6 +221,7 @@ async function updateGasCarData(currentCar) {
         document.getElementById('gasPrice').innerText = `$${carData.avgPricePerGallon.toFixed(2)} \xB1 $${carData.stdDevPricePerGallon.toFixed(2)}`;
 
         // Populate summary table for lifetime data.
+        document.getElementById('pricePerMileLifetime').innerText = `$${lifetimeData.pricePerMile.toFixed(2)}`;
         document.getElementById('numFillupsLifetime').innerText = lifetimeData.numTransactions;
         document.getElementById('mpgLifetime').innerText = `${lifetimeData.avgMpg.toFixed(2)} \xB1 ${lifetimeData.stdDevMpg.toFixed(2)}`;
         document.getElementById('mpgMaxMinLifetime').innerText = `${lifetimeData.minMpg.toFixed(2)} - ${lifetimeData.maxMpg.toFixed(2)}`;

@@ -142,6 +142,8 @@ async function populateAggregateData(client, data, carCondition) {
                 data[k] = doc[k] === null ? 0.0 : doc[k];
             }
         }
+
+        data['pricePerMile'] = doc['totalMunny'] / doc['totalMiles'];
     });
 
     // Dividing the difference between the last and first dates, and the 
@@ -243,6 +245,8 @@ async function populateAggregateEVData(client, data, carCondition) {
                 data[k] = doc[k] === null ? 0.0 : doc[k];
             }
         }
+
+        data['pricePerMile'] = doc['totalMunny'] / doc['totalMiles'];
     });
 
     // Dividing the difference between the last and first dates, and the 
