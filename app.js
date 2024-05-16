@@ -13,6 +13,7 @@ const os = require('os');
 const config = JSON.parse(fs.readFileSync('config.json', 'utf8'));
 const port = config['port'];
 const db = Object.freeze(config['db']);
+const evDb = Object.freeze(config['evDb']);
 const dbUser = Object.freeze(config['dbUser']);
 const dbPassword = Object.freeze(config['dbPassword']);
 const openExchangeRatesUrl = Object.freeze(`https://openexchangerates.org/api/latest.json?app_id=${config['openExchangeRatesAppId']}`);
@@ -187,6 +188,102 @@ app.post('/api/getCarData', async (req, res) => {
     }
 });
 
+/*
+ * Aggregate data is calculated for both the current car and lifetime.
+ */
+async function populateAggregateEVData(client, data, carCondition) {
+    await client.db(evDb).collection(dbCollection).aggregate([
+        {
+            $match: carCondition
+        },
+        {
+            $group: {
+                _id: null,
+                numTransactions: { $sum: 1 },
+                avgMpKWh: { $avg: { $divide: ['$miles', '$kWhs'] } },
+                stdDevMpKWh: { $stdDevSamp: { $divide: ['$miles', '$kWhs'] } },
+                minMpKWh: { $min: { $divide: ['$miles', '$kWhs'] } },
+                maxMpKWh: { $max: { $divide: ['$miles', '$kWhs'] } },
+                totalMunny: { $sum: { $multiply: ['$kWhs', '$pricePerKWh'] } },
+                avgMunny: { $avg: { $multiply: ['$kWhs', '$pricePerKWh'] } },
+                stdDevMunny: { $stdDevSamp: { $multiply: ['$kWhs', '$pricePerKWh'] } },
+                totalKWhs: { $sum: '$kWhs' },
+                avgKWhs: { $avg: '$kWhs' },
+                stdDevKWhs: { $stdDevSamp: '$kWhs' },
+                totalMiles: { $sum: '$miles' },
+                avgMiles: { $avg: '$miles' },
+                stdDevMiles: { $stdDevSamp: '$miles' },
+                avgPricePerKWh: { $avg: '$pricePerKWh' },
+                stdDevPricePerKWh: { $stdDevSamp: '$pricePerKWh' }
+            }
+        }
+    ]).forEach(doc => {
+        for (const k in doc) {
+            if (k !== '_id') {
+                data[k] = doc[k] === null ? 0.0 : doc[k];
+            }
+        }
+    });
+
+    // Dividing the difference between the last and first dates, and the 
+    // number of transactions gives the average time between fills.
+    const firstDate = moment((await client.db(evDb).collection(dbCollection)
+        .find(carCondition).sort({ date: +1 }).limit(1).toArray())[0].date);
+    const lastDate = moment((await client.db(evDb).collection(dbCollection)
+        .find(carCondition).sort({ date: -1 }).limit(1).toArray())[0].date);
+    const firstLastDiff = lastDate.diff(firstDate);
+    data['avgTimeBetween'] = moment.duration(firstLastDiff / data.numTransactions).asDays();
+    data['dateRange'] =
+        `${moment.duration(firstLastDiff).asYears().toFixed(1)} years | ${firstDate.format('YYYY')}-${lastDate.format('YYYY')}`;
+}
+
+app.post('/api/getEVData', async (req, res) => {
+    if (checkMaintenanceMode(res)) {
+        return;
+    }
+
+    const car = req.body.car;
+    const startTime = moment();
+
+    const client = await getMongoClient();
+    if (client == null) {
+        res.status(500).send("Error connecting to MongoDB. See logs.");
+        return;
+    }
+
+    try {
+        const data = {};
+        const lifetimeData = {};
+        data['transactions'] = new Array();
+
+        // Populate raw transaction data and calculate basic aggregate fields.
+        await client.db(evDb).collection(dbCollection).find({car: car}).sort({ date: -1 }).forEach(doc => {
+            // miles-per-kWh and munny are generated (not stored in db)
+            doc['mpKWh'] = doc['miles'] / doc['kWhs'];
+            doc['munny'] = doc['kWhs'] * doc['pricePerKWh'];
+
+            data['transactions'].push(doc);
+        });
+
+        if (data['transactions'].length > 0) {
+            await populateAggregateEVData(client, data, { car: car });
+            await populateAggregateEVData(client, lifetimeData, {});
+        }
+
+        console.log(`retrieved data for ${car}`);
+        res.send({
+            carData: data,
+            lifetimeData: lifetimeData,
+            duration: moment().diff(startTime, 'milliseconds')
+        });
+    } catch (err) {
+        console.error(err);
+        res.status(500).send(err);
+    } finally {
+        client.close();
+    }
+});
+
 app.post('/api/submit', async (req, res) => {
     const startTime = moment();
 
@@ -209,12 +306,12 @@ app.post('/api/submit', async (req, res) => {
 
     try {
         // Check the nonce.
-        const nonceRecord = await client.db(db).collection(dbCollection).findOne({ nonce: nonce });
+        const nonceRecord = await client.db(evDb).collection(dbCollection).findOne({ nonce: nonce });
         if (nonceRecord !== null) {
             throw 'Nonce exists!';
         }
         
-        const insertResult = await client.db(db).collection(dbCollection).insertOne(transaction);
+        const insertResult = await client.db(evDb).collection(dbCollection).insertOne(transaction);
         if (insertResult.result.ok) {
             console.log(`inserted ${insertResult.insertedId} into the db`);
             res.send({ duration: moment().diff(startTime, "milliseconds") });

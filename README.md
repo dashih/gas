@@ -15,3 +15,4 @@ Track MPG and other stats for Danny's cars.
 | 9       | Security - nonces |
 | 10      | Major front-end rewrite to remove the jQuery dependency (thanks to the Fetch API) |
 | 11      | Dockerization |
+| 12      | Support for EVs and rebrand to Danny's Car App |

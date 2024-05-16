@@ -5,10 +5,10 @@
 
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <meta name="description" content="Danny's Gas App">
+    <meta name="description" content="Danny's Car App">
     <meta name="author" content="dashih">
 
-    <title>Danny's Gas App</title>
+    <title>Danny's Car App</title>
 
     <!-- Bootstrap core CSS -->
     <link rel="stylesheet" href="vendor/bootstrap-5.0.2-dist/bootstrap.min.css">
@@ -27,7 +27,7 @@
       <!-- Title -->
       <div class="row mt-3 g-0">
         <div class="col-md-auto mx-auto">
-          <h1>Danny's Gas App</h1>
+          <h1>Danny's Car App</h1>
           <hr class="my-3" />
           <div id="version" class="versions">hello</div>
           <hr class="my-3" />
@@ -38,7 +38,8 @@
       <div class="row g-0 mb-2">
         <div class="col-md-auto mx-auto">
           <select id="carSelector" class="custom-select text-center">
-            <option selected value="2018-Ford-Mustang-GT350" class="text-center">2018 Ford Mustang GT350</option>
+            <option selected value="2024-Hyundai-Ioniq-5-SE-AWD">2024 Hyundai Ioniq 5 SE AWD</option>
+            <option value="2018-Ford-Mustang-GT350">2018 Ford Mustang GT350</option>
             <option value="1997-BMW-M3">1997 BMW M3</option>
             <option value="2011-BMW-335xi">2011 BMW 335xi</option>
             <option value="2013-BMW-328i">2013 BMW 328i</option>
@@ -61,16 +62,32 @@
           <div class="col-md-auto mx-auto">
             <div class="form-group text-dark">
               <div class="form-floating mb-2">
+                <select id="chargerType" class="custom-select text-center">
+                  <option selected value="CCS-150">CCS 150 kW</option>
+                  <option value="CCS-50">CCS 50 kW</option>
+                  <option value="CCS-200">CCS 200 kW</option>
+                  <option value="CCS-350">CCS 350 kW</option>
+                </select>
+              </div>
+              <div class="form-floating mb-2">
                 <input id="miles" placeholder="Miles" class="form-control text-center" type="text" />
                 <label for="miles">Miles</label>
               </div>
                <div class="form-floating mb-2">
-                <input id="pricePerGallon" placeholder="$ per gallon" class="form-control text-center" type="text" />
-                <label id="pricePerGallonLabel" for="pricePerGallon">$ per gallon</label>
+                <input id="pricePerKWh" placeholder="$ per kWh" class="form-control text-center" type="text" />
+                <label id="pricePerKwhLabel" for="pricePerKWh">$ per kWh</label>
               </div>
               <div class="form-floating mb-2">
-                <input id="gallons" placeholder="Gallons" class="form-control text-center" type="text" />
-                <label id="gallonsLabel" for="gallons">Gallons</label>
+                <input id="timeInS" placeholder="timeInS" class="form-control text-center" type="text" />
+                <label id="timeInSLabel" for="timeInS">Time (sec)</label>
+              </div>
+              <div class="form-floating mb-2">
+                <input id="kWhs" placeholder="kWhs" class="form-control text-center" type="text" />
+                <label id="KWhsLabel" for="kWhs">Total kWhs</label>
+              </div>
+              <div class="form-floating mb-2">
+                <input id="peakKW" placeholder="Peak kW" class="form-control text-center" type="text" />
+                <label id="peakKWLabel" for="peakKW">Peak kW</label>
               </div>
               <div class="form-floating">
                 <input id="comments" placeholder="Comments" class="form-control text-center" type="text" />
@@ -96,22 +113,41 @@
           <h4 id="currentCar"></h4>
           <div id="currentCarDateRange" class="small"></div>
           <hr class="my-3" />
-          <table class="table text-left text-light">
-            <tbody>
-              <tr><td></td><td><strong>Current</strong></td><td><strong>Lifetime</strong></td></tr>
-              <tr><td><strong># of fillups</strong></td><td id="numFillups"></td><td id="numFillupsLifetime"></td></tr>
-              <tr><td><strong>MPG</strong></td><td id="mpg"></td><td id="mpgLifetime"></td></tr>
-              <tr><td><strong>MPG max/min</strong></td><td id="mpgMaxMin"></td><td id="mpgMaxMinLifetime"></td></tr>
-              <tr><td><strong>Total miles</strong></td><td id="totalMiles"></td><td id="totalMilesLifetime"></td></tr>
-              <tr><td><strong>Total gallons</strong></td><td id="totalGallons"></td><td id="totalGallonsLifetime"></td></tr>
-              <tr><td><strong>Total $</strong></td><td id="totalMunny"></td><td id="totalMunnyLifetime"></td></tr>
-              <tr><td><strong>Time between</strong></td><td id="timeBetween"></td><td id="timeBetweenLifetime"></td></tr>
-              <tr><td><strong>$ per fillup</strong></td><td id="munnyPerFillup"></td><td id="munnyPerFillupLifetime"></td></tr>
-              <tr><td><strong>Miles per fillup</strong></td><td id="milesPerFillup"></td><td id="milesPerFillupLifetime"></td></tr>
-              <tr><td><strong>Gallons per fillup</strong></td><td id="gallonsPerFillup"></td><td id="gallonsPerFillupLifetime"></td></tr>
-              <tr><td><strong>Gas price</strong></td><td id="gasPrice"></td><td id="gasPriceLifetime"></td></tr>
-            </tbody>
-          </table>
+          <div id="gasSummaryDiv">
+            <table class="table text-left text-light">
+              <tbody>
+                <tr><td></td><td><strong>Current</strong></td><td><strong>Lifetime</strong></td></tr>
+                <tr><td><strong># of fillups</strong></td><td id="numFillups"></td><td id="numFillupsLifetime"></td></tr>
+                <tr><td><strong>MPG</strong></td><td id="mpg"></td><td id="mpgLifetime"></td></tr>
+                <tr><td><strong>MPG max/min</strong></td><td id="mpgMaxMin"></td><td id="mpgMaxMinLifetime"></td></tr>
+                <tr><td><strong>Total miles</strong></td><td id="totalMiles"></td><td id="totalMilesLifetime"></td></tr>
+                <tr><td><strong>Total gallons</strong></td><td id="totalGallons"></td><td id="totalGallonsLifetime"></td></tr>
+                <tr><td><strong>Total $</strong></td><td id="totalMunny"></td><td id="totalMunnyLifetime"></td></tr>
+                <tr><td><strong>Time between</strong></td><td id="timeBetween"></td><td id="timeBetweenLifetime"></td></tr>
+                <tr><td><strong>$ per fillup</strong></td><td id="munnyPerFillup"></td><td id="munnyPerFillupLifetime"></td></tr>
+                <tr><td><strong>Miles per fillup</strong></td><td id="milesPerFillup"></td><td id="milesPerFillupLifetime"></td></tr>
+                <tr><td><strong>Gallons per fillup</strong></td><td id="gallonsPerFillup"></td><td id="gallonsPerFillupLifetime"></td></tr>
+                <tr><td><strong>Gas price</strong></td><td id="gasPrice"></td><td id="gasPriceLifetime"></td></tr>
+              </tbody>
+            </table>
+          </div>
+          <div id="evSummaryDiv">
+            <table class="table text-left text-light">
+              <tbody>
+                <tr><td></td><td><strong>Current</strong></td><td><strong>Lifetime</strong></td></tr>
+                <tr><td><strong># of charges</strong></td><td id="numCharges"></td><td id="numChargesLifetime"></td></tr>
+                <tr><td><strong>Miles per kWh</strong></td><td id="mpKWh"></td><td id="mpKWhLifetime"></td></tr>
+                <tr><td><strong>Total miles</strong></td><td id="evTotalMiles"></td><td id="evTotalMilesLifetime"></td></tr>
+                <tr><td><strong>Total kWhs</strong></td><td id="totalKWhs"></td><td id="totalKWhsLifetime"></td></tr>
+                <tr><td><strong>Total $</strong></td><td id="evTotalMunny"></td><td id="evTotalMunnyLifetime"></td></tr>
+                <tr><td><strong>Time between</strong></td><td id="evTimeBetween"></td><td id="evTimeBetweenLifetime"></td></tr>
+                <tr><td><strong>$ per charge</strong></td><td id="munnyPerCharge"></td><td id="munnyPerChargeLifetime"></td></tr>
+                <tr><td><strong>Miles per charge</strong></td><td id="milesPerCharge"></td><td id="milesPerChargeLifetime"></td></tr>
+                <tr><td><strong>kWhs per charge</strong></td><td id="kWhsPerCharge"></td><td id="kWhsPerChargeLifetime"></td></tr>
+                <tr><td><strong>kWh price</strong></td><td id="kWhPrice"></td><td id="kWhPriceLifetime"></td></tr>
+              </tbody>
+            </table>
+          </div>
         </div>
       </div>
 
@@ -121,20 +157,38 @@
       <div id="transactionsDiv" class="row g-0">
         <div class="col-lg-12 mx-auto">
           <div class="table-responsive">
-            <table id="transactionsTable" class="table text-light">
-              <thead>
-                <tr>
-                  <th>Date</th>
-                  <th>Miles</th>
-                  <th>Gallons</th>
-                  <th>MPG</th>
-                  <th>$ per gallon</th>
-                  <th>Munny</th>
-                  <th>Comments</th>
-                </tr>
-              </thead>
-              <tbody></tbody>
-            </table>
+            <div id="gasAllDiv">
+              <table id="transactionsTable" class="table text-light">
+                <thead>
+                  <tr>
+                    <th>Date</th>
+                    <th>Miles</th>
+                    <th>Gallons</th>
+                    <th>MPG</th>
+                    <th>$ per gallon</th>
+                    <th>Munny</th>
+                    <th>Comments</th>
+                  </tr>
+                </thead>
+                <tbody></tbody>
+              </table>
+            </div>
+            <div id="evAllDiv">
+              <table id="evTransactionsTable" class="table text-light">
+                <thead>
+                  <tr>
+                    <th>Date</th>
+                    <th>Miles</th>
+                    <th>kWhs</th>
+                    <th>Miles per kWh</th>
+                    <th>$ per kWh</th>
+                    <th>Munny</th>
+                    <th>Comments</th>
+                  </tr>
+                </thead>
+                <tbody></tbody>
+              </table>
+            </div>
           </div>
         </div>
       </div>

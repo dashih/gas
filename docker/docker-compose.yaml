@@ -1,5 +1,3 @@
-version: '3.8'
-
 services:
   gas:
     image: dannyshih/gas:v11.4.1
@@ -12,12 +10,26 @@ services:
     volumes:
       - ./config/config.json:/home/node/app/config.json
 
+  gasSandbox:
+    image: node:20.13.1
+    container_name: gas_dev_sandbox
+    restart: unless-stopped
+    ports:
+      - "8001:80"
+    environment:
+      GAS_DB_HOST: db
+    volumes:
+      - ./config/config.json:/home/node/app/config.json
+      - ../:/home/node/app
+    working_dir: /home/node/app
+    entrypoint: [ "node", "app.js" ]
+
   db:
     image: mongo:7.0.3
     container_name: gas_dev_db
     restart: unless-stopped
     ports:
-      - "8001:27017"
+      - "8002:27017"
     environment:
       MONGO_INITDB_ROOT_USERNAME: root
       MONGO_INITDB_ROOT_PASSWORD: dumbledore

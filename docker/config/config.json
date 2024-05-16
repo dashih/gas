@@ -1,6 +1,7 @@
 {
     "port": 80,
     "db": "gas",
+    "evDb": "ev",
     "dbUser": "root",
     "dbPassword": "dumbledore",
     "openExchangeRatesAppId": ""
