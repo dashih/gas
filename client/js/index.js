@@ -105,8 +105,12 @@ async function updateEVData(currentCar) {
             const newRow = transactionsTableBody.insertRow();
             newRow.innerHTML = `
                 <td>${dateTime}</td>
+                <td>${cur.chargerType}</td>
                 <td>${cur.miles}</td>
                 <td>${cur.kWhs.toFixed(2)}</td>
+                <td>${cur.prettyTime}</td>
+                <td>${cur.avgRateKW.toFixed(2)}</td>
+                <td>${cur.peakKW}</td>
                 <td>${cur.mpKWh.toFixed(2)}</td>
                 <td>${'$' + cur.pricePerKWh.toFixed(2)}</td>
                 <td>${'$' + cur.munny.toFixed(2)}</td>
@@ -121,6 +125,8 @@ async function updateEVData(currentCar) {
         document.getElementById('totalKWhs').innerText = parseFloat(carData.totalKWhs.toFixed(2)).toLocaleString();
         document.getElementById('evTotalMunny').innerText = `$${parseFloat(carData.totalMunny.toFixed(2)).toLocaleString()}`
         document.getElementById('evTimeBetween').innerText = `${carData.avgTimeBetween.toFixed(2)} days`;
+        document.getElementById('chargeRate').innerText = `${carData.avgChargeRate.toFixed(2)} \xB1 ${carData.stdDevChargeRate.toFixed(2)}`;
+        document.getElementById('chargeTime').innerText = `${Math.round(carData.avgChargeTimeInMin)} \xB1 ${Math.round(carData.stdDevChargeTimeInMin)}`;
         document.getElementById('munnyPerCharge').innerText = `$${carData.avgMunny.toFixed(2)} \xB1 $${carData.stdDevMunny.toFixed(2)}`;
         document.getElementById('milesPerCharge').innerText = `${carData.avgMiles.toFixed(2)} \xB1 ${carData.stdDevMiles.toFixed(2)}`;
         document.getElementById('kWhsPerCharge').innerText = `${carData.avgKWhs.toFixed(2)} \xB1 ${carData.stdDevKWhs.toFixed(2)}`;
@@ -133,6 +139,8 @@ async function updateEVData(currentCar) {
         document.getElementById('totalKWhsLifetime').innerText = parseFloat(lifetimeData.totalKWhs.toFixed(2)).toLocaleString();
         document.getElementById('evTotalMunnyLifetime').innerText = `$${parseFloat(lifetimeData.totalMunny.toFixed(2)).toLocaleString()}`
         document.getElementById('evTimeBetweenLifetime').innerText = `${lifetimeData.avgTimeBetween.toFixed(2)} days`;
+        document.getElementById('chargeRateLifetime').innerText = `${lifetimeData.avgChargeRate.toFixed(2)} \xB1 ${lifetimeData.stdDevChargeRate.toFixed(2)}`;
+        document.getElementById('chargeTimeLifetime').innerText = `${Math.round(lifetimeData.avgChargeTimeInMin)} \xB1 ${Math.round(lifetimeData.stdDevChargeTimeInMin)}`;
         document.getElementById('munnyPerChargeLifetime').innerText = `$${lifetimeData.avgMunny.toFixed(2)} \xB1 $${lifetimeData.stdDevMunny.toFixed(2)}`;
         document.getElementById('milesPerChargeLifetime').innerText = `${lifetimeData.avgMiles.toFixed(2)} \xB1 ${lifetimeData.stdDevMiles.toFixed(2)}`;
         document.getElementById('kWhsPerChargeLifetime').innerText = `${lifetimeData.avgKWhs.toFixed(2)} \xB1 ${lifetimeData.stdDevKWhs.toFixed(2)}`;
@@ -269,11 +277,12 @@ document.getElementById('submitButton').onclick = async () => {
     const carSelector = document.getElementById('carSelector');
     const currentCar = carSelector.options[carSelector.selectedIndex].value;
     const chargerTypeSelector = document.getElementById('chargerType');
-    const chargerType = chargerTypeSelector.options[chargerTypeSelector.selectedIndex].value;
+    const chargerType = 'CCS';
+    const chargerMax = parseInt(chargerTypeSelector.options[chargerTypeSelector.selectedIndex].value);
 
     const miles = parseFloat(document.getElementById('miles').value);
     const pricePerKWh = parseFloat(document.getElementById('pricePerKWh').value);
-    const timeInS = document.getElementById('timeInS').value;
+    const timeInS = parseInt(document.getElementById('timeInS').value);
     const kWhs = parseFloat(document.getElementById('kWhs').value);
     const peakKW = parseFloat(document.getElementById('peakKW').value);
     const comments = document.getElementById('comments').value;
@@ -290,6 +299,7 @@ document.getElementById('submitButton').onclick = async () => {
         'nonce': nonce,
         'car': currentCar,
         'chargerType': chargerType,
+        'chargerMax': chargerMax,
         'miles': miles,
         'pricePerKWh': pricePerKWh,
         'kWhs': kWhs,

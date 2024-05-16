@@ -63,10 +63,10 @@
             <div class="form-group text-dark">
               <div class="form-floating mb-2">
                 <select id="chargerType" class="custom-select text-center">
-                  <option selected value="CCS-150">CCS 150 kW</option>
-                  <option value="CCS-50">CCS 50 kW</option>
-                  <option value="CCS-200">CCS 200 kW</option>
-                  <option value="CCS-350">CCS 350 kW</option>
+                  <option selected value="150">CCS 150 kW</option>
+                  <option value="50">CCS 50 kW</option>
+                  <option value="200">CCS 200 kW</option>
+                  <option value="350">CCS 350 kW</option>
                 </select>
               </div>
               <div class="form-floating mb-2">
@@ -141,6 +141,8 @@
                 <tr><td><strong>Total kWhs</strong></td><td id="totalKWhs"></td><td id="totalKWhsLifetime"></td></tr>
                 <tr><td><strong>Total $</strong></td><td id="evTotalMunny"></td><td id="evTotalMunnyLifetime"></td></tr>
                 <tr><td><strong>Time between</strong></td><td id="evTimeBetween"></td><td id="evTimeBetweenLifetime"></td></tr>
+                <tr><td><strong>Charge rate (kW)</strong></td><td id="chargeRate"></td><td id="chargeRateLifetime"></td></tr>
+                <tr><td><strong>Charge time (min)</strong></td><td id="chargeTime"></td><td id="chargeTimeLifetime"></td></tr>
                 <tr><td><strong>$ per charge</strong></td><td id="munnyPerCharge"></td><td id="munnyPerChargeLifetime"></td></tr>
                 <tr><td><strong>Miles per charge</strong></td><td id="milesPerCharge"></td><td id="milesPerChargeLifetime"></td></tr>
                 <tr><td><strong>kWhs per charge</strong></td><td id="kWhsPerCharge"></td><td id="kWhsPerChargeLifetime"></td></tr>
@@ -178,8 +180,12 @@
                 <thead>
                   <tr>
                     <th>Date</th>
+                    <th>Type</th>
                     <th>Miles</th>
-                    <th>kWhs</th>
+                    <th>Total (kWh)</th>
+                    <th>Time (min)</th>
+                    <th>Avg rate (kW)</th>
+                    <th>Max rate (kW)</th>
                     <th>Miles per kWh</th>
                     <th>$ per kWh</th>
                     <th>Munny</th>
