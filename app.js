@@ -285,7 +285,7 @@ app.post('/api/getEVData', async (req, res) => {
             // miles-per-kWh and munny are generated (not stored in db)
             doc['mpKWh'] = doc['miles'] / doc['kWhs'];
             doc['munny'] = doc['kWhs'] * doc['pricePerKWh'];
-            doc['prettyTime'] = `${Math.round(doc['timeInS'] / 60)}m${doc['timeInS'] % 60}s`;
+            doc['prettyTime'] = `${Math.floor(doc['timeInS'] / 60)}m${doc['timeInS'] % 60}s`;
             doc['avgRateKW'] = doc['kWhs'] / (doc['timeInS'] / 3600);
 
             data['transactions'].push(doc);
