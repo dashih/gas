@@ -1,6 +1,6 @@
 services:
   gas:
-    image: dannyshih/gas:v12.1.4
+    image: registry.internal.dannyshih.net:5000/gas:v12.1.5
     container_name: gas_dev_app
     restart: unless-stopped
     ports:
@@ -11,7 +11,7 @@ services:
       - ./config/config.json:/home/node/app/config.json
 
   gasSandbox:
-    image: node:20.13.1
+    image: node:20.18.0
     container_name: gas_dev_sandbox
     restart: unless-stopped
     ports:
@@ -25,7 +25,7 @@ services:
     entrypoint: [ "node", "app.js" ]
 
   db:
-    image: mongo:7.0.3
+    image: mongo:8.0.1
     container_name: gas_dev_db
     restart: unless-stopped
     ports:
