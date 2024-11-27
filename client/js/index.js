@@ -281,8 +281,8 @@ document.getElementById('submitButton').onclick = async () => {
     const carSelector = document.getElementById('carSelector');
     const currentCar = carSelector.options[carSelector.selectedIndex].value;
     const chargerTypeSelector = document.getElementById('chargerType');
-    const chargerType = 'CCS';
     const chargerMax = parseInt(chargerTypeSelector.options[chargerTypeSelector.selectedIndex].value);
+    const chargerType = chargerMax < 20 ? 'L2' : 'CCS';
 
     const miles = parseFloat(document.getElementById('miles').value);
     const pricePerKWh = parseFloat(document.getElementById('pricePerKWh').value);
