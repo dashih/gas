@@ -210,9 +210,15 @@ app.post('/api/getCarData', async (req, res) => {
  * Aggregate data is calculated for both the current car and lifetime.
  */
 async function populateAggregateEVData(client, data, carCondition) {
+    // Exclude L2 charges. The data is too different.
+    const matchCondition = carCondition;
+    matchCondition['chargerType'] = {
+        $not: { $eq: 'L2' }
+    };
+
     await client.db(evDb).collection(dbCollection).aggregate([
         {
-            $match: carCondition
+            $match: matchCondition
         },
         {
             $group: {
