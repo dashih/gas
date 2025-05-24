@@ -50,6 +50,15 @@ function showCarData(show) {
     }
 }
 
+function hhmmssToSeconds(timeStr) {
+    const [hours, minutes, seconds] = timeStr.split(':').map(Number);
+    if (isNaN(hours) || isNaN(minutes) || isNaN(seconds)) {
+        return NaN;
+    }
+
+    return hours * 3600 + minutes * 60 + seconds;
+}
+
 async function updateCarData() {
     reportStatus(Status.Processing, null);
 
@@ -286,7 +295,7 @@ document.getElementById('submitButton').onclick = async () => {
 
     const miles = parseFloat(document.getElementById('miles').value);
     const pricePerKWh = parseFloat(document.getElementById('pricePerKWh').value);
-    const timeInS = parseInt(document.getElementById('timeInS').value);
+    const timeInS = hhmmssToSeconds(document.getElementById('time').value);
     const kWhs = parseFloat(document.getElementById('kWhs').value);
     const peakKW = parseFloat(document.getElementById('peakKW').value);
     const comments = document.getElementById('comments').value;

@@ -1,6 +1,6 @@
 services:
   gas:
-    image: registry.internal.dannyshih.net:5000/gas:v12.2.0
+    image: registry.internal.dannyshih.net:5000/gas:v12.3.0
     container_name: gas_dev_app
     restart: unless-stopped
     ports:
