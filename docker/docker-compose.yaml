@@ -1,6 +1,6 @@
 services:
   gasA:
-    image: registry.internal.dannyshih.net:5000/gas:v12.4.0
+    image: registry.internal.dannyshih.net:5000/gas:v12.6.0
     container_name: gas_dev_appA
     restart: unless-stopped
     ports:
@@ -11,12 +11,12 @@ services:
       - ./config/config.json:/home/node/app/config.json
 
   gasB:
-    image: registry.internal.dannyshih.net:5000/gas:v12.5.0
+    image: registry.internal.dannyshih.net:5000/gas:v12.6.0
     container_name: gas_dev_appB
     platform: linux/amd64
     build:
-      context: ./
-      dockerfile: Dockerfile
+      context: ../
+      dockerfile: docker/Dockerfile
     restart: unless-stopped
     ports:
       - "8001:80"
