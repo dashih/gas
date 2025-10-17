@@ -1,6 +1,6 @@
 {
   "name": "gas",
-  "version": "12.4.0",
+  "version": "12.5.0",
   "description": "Track MPG and other stats for gas cars",
   "main": "app.js",
   "scripts": {
