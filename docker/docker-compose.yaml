@@ -13,6 +13,7 @@ services:
   gasB:
     image: registry.internal.dannyshih.net:5000/gas:v12.5.0
     container_name: gas_dev_appB
+    platform: linux/amd64
     build:
       context: ./
       dockerfile: Dockerfile
