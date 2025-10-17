@@ -1,7 +1,7 @@
 services:
-  gas:
-    image: registry.internal.dannyshih.net:5000/gas:v12.3.0
-    container_name: gas_dev_app
+  gasA:
+    image: registry.internal.dannyshih.net:5000/gas:v12.4.0
+    container_name: gas_dev_appA
     restart: unless-stopped
     ports:
       - "8000:80"
@@ -10,9 +10,12 @@ services:
     volumes:
       - ./config/config.json:/home/node/app/config.json
 
-  gasSandbox:
-    image: node:22.12.0
-    container_name: gas_dev_sandbox
+  gasB:
+    image: registry.internal.dannyshih.net:5000/gas:v12.5.0
+    container_name: gas_dev_appB
+    build:
+      context: ./
+      dockerfile: Dockerfile
     restart: unless-stopped
     ports:
       - "8001:80"
