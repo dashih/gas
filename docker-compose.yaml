@@ -1,0 +1,40 @@
+services:
+  gas:
+    image: registry.internal.dannyshih.net:5000/gas:v12.7.0
+    container_name: gas_dev_app
+    platform: linux/amd64
+    build: .
+    restart: unless-stopped
+    ports:
+      - "8000:80"
+    environment:
+      GAS_DB_HOST: db
+
+  db:
+    image: mongo:8.0.1
+    container_name: gas_dev_db
+    restart: unless-stopped
+    ports:
+      - "8002:27017"
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: root
+      MONGO_INITDB_ROOT_PASSWORD: dumbledore
+    volumes:
+      - gas_dev_db:/data/db
+      - gas_dev_dbconfigsvr:/data/configdb
+
+  mongo-express:
+    image: mongo-express:1.0.2
+    container_name: gas_mongo-express
+    restart: unless-stopped
+    ports:
+      - "9090:80"
+    environment:
+      ME_CONFIG_MONGODB_URL: mongodb://root:dumbledore@db:27017/?ssl=false
+      ME_CONFIG_MONGODB_ENABLE_ADMIN: "true"
+      ME_CONFIG_BASICAUTH: "false"
+      PORT: 80
+
+volumes:
+  gas_dev_db:
+  gas_dev_dbconfigsvr:
